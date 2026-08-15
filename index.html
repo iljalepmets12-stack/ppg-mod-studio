@@ -33,11 +33,13 @@
       z-index: 10;
     }
     .top-bar .brand {
-      font-size: 18px;
-      font-weight: 800;
-      background: linear-gradient(135deg, #4f86f7, #6ee7b7);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      font-size: 16px;
+      font-weight: 700;
+      color: #e2e8f0;
+      letter-spacing: 0.3px;
+    }
+    .top-bar .brand span {
+      color: #4f86f7;
     }
     .top-bar .actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
     .top-bar .actions button {
@@ -280,6 +282,14 @@
       font-size: 13px;
       margin-bottom: 6px;
     }
+    .msg.assistant .bubble.think-plan .plan-title {
+      font-weight: 600;
+      color: #6ee7b7;
+      margin-bottom: 6px;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
     .msg .logs {
       background: rgba(52,211,153,0.05);
       border: 1px solid rgba(52,211,153,0.1);
@@ -289,6 +299,39 @@
       font-size: 12px;
       font-family: 'Consolas', monospace;
       margin-top: 6px;
+    }
+    .msg .logs .log-entry {
+      padding: 2px 0;
+      border-bottom: 1px solid rgba(52,211,153,0.05);
+    }
+    .msg .logs .log-entry:last-child {
+      border-bottom: none;
+    }
+
+    .typing-indicator {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 0;
+      color: #4a5a7a;
+      font-size: 13px;
+    }
+    .typing-indicator .dots {
+      display: flex;
+      gap: 4px;
+    }
+    .typing-indicator .dot {
+      width: 6px;
+      height: 6px;
+      background: #6ee7b7;
+      border-radius: 50%;
+      animation: bounce 1.4s infinite ease-in-out;
+    }
+    .typing-indicator .dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-indicator .dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes bounce {
+      0%, 80%, 100% { transform: scale(0.6); opacity: 0.3; }
+      40% { transform: scale(1); opacity: 1; }
     }
 
     .input-area {
@@ -354,6 +397,11 @@
       color: #fff;
     }
     .input-row button.send:hover { box-shadow: 0 0 20px rgba(79,134,247,0.4); transform: translateY(-2px); }
+    .input-row button.send:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
 
     .preview-panel {
       width: 0;
@@ -450,20 +498,18 @@
 <body>
 
 <div class="top-bar">
-  <span class="brand">🛠 PPG Mod Studio</span>
+  <div class="brand">PPG <span>Mod Studio</span></div>
   <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
     <div class="model-selector" id="modelSelector">
       <div class="selected" id="modelSelectBtn">
-        <span id="currentModelLabel">gemini-2.5-flash</span> ▾
+        <span id="currentModelLabel">Кастомная модель</span> ▾
       </div>
       <div class="dropdown" id="modelDropdown">
-        <div class="opt selected" data-model="gemini-2.5-flash">gemini-2.5-flash</div>
-        <div class="opt" data-model="gemini-2.5-pro">gemini-2.5-pro</div>
-        <div class="opt" data-model="custom">Кастомная модель</div>
+        <div class="opt selected" data-model="custom">Кастомная модель</div>
       </div>
     </div>
     <label class="switch-label">
-      <input type="checkbox" id="thinkMode" /> 🧠 Think
+      <input type="checkbox" id="thinkMode" checked /> 🧠 Think
     </label>
     <div class="actions">
       <button class="primary" id="zipBtn">📦 ZIP</button>
@@ -552,7 +598,7 @@
   // --- State ---
   let apiKey = localStorage.getItem('app_api_key') || '';
   let baseUrl = localStorage.getItem('app_base_url') || '';
-  let selectedModel = localStorage.getItem('app_model') || 'gemini-2.5-flash';
+  let selectedModel = 'custom';
   let customModel = localStorage.getItem('app_custom_model') || '';
   let messages = JSON.parse(localStorage.getItem('app_messages') || '[]');
   let fs = JSON.parse(localStorage.getItem('app_fs') || '{}');
@@ -560,37 +606,25 @@
   let activeAttachment = null;
   let selectedFilePath = null;
 
-  // --- System Instruction (обновлённый) ---
+  // --- System Instruction ---
   function getSystemInstruction(thinkMode) {
     let base = `Ты — эксперт C# разработчик модов для People Playground.
 Твоя задача — создавать рабочий код C# скриптов и манифест mod.json.
 
-ПРАВИЛА ОТВЕТА (ОЧЕНЬ ВАЖНО):
-1. ОТВЕЧАЙ ТОЛЬКО VFS-БЛОКАМИ с кодом.
-2. НЕ ПИШИ никаких описаний, списков, заголовков, жирного текста, эмодзи.
-3. НЕ ОБЪЯСНЯЙ код — он говорит сам за себя.
-4. Если нужно что-то пояснить — напиши ОДНУ КОРОТКУЮ СТРОКУ и сразу VFS-блоки.
-5. ЗАПРЕЩЕНО использовать: ###, **, *, -, 📦, и т.п.
-
-Формат VFS:
+ВАЖНО: Отвечай ТОЛЬКО в формате VFS-блоков. Каждый файл должен быть в отдельном блоке:
 \`\`\`vfs
-WRITE /mod.json
-{ "Name": "My Mod", "Author": "User" }
+WRITE /путь/к/файлу.cs
+код файла
 \`\`\`
-или
-\`\`\`vfs
-DELETE /file.cs
-\`\`\``;
+
+Не пиши лишнего текста, только VFS-блоки.`;
 
     if (thinkMode) {
       base += `
 
-ДОПОЛНИТЕЛЬНО: Перед тем как писать VFS-блоки, покажи КРАТКИЙ ПЛАН действий в виде маркированного списка (используй символ "-" для каждого пункта). План должен быть не более 5 пунктов. Например:
-- Создаю файл Main.cs с базовой структурой
-- Добавляю логику обновления
-- Создаю mod.json
-
-После плана сразу идут VFS-блоки.`;
+СНАЧАЛА покажи КРАТКИЙ ПЛАН действий в виде списка (используй "-" для каждого пункта). 
+План должен быть не более 5 пунктов.
+ЗАТЕМ сразу идут VFS-блоки с кодом.`;
     }
     return base;
   }
@@ -704,8 +738,10 @@ DELETE /file.cs
         bub.className = 'bubble';
         if (m.role === 'assistant' && m.isPlan) {
           bub.classList.add('think-plan');
+          bub.innerHTML = `<div class="plan-title">🧠 План действий:</div>` + m.content;
+        } else {
+          bub.textContent = m.content;
         }
-        bub.textContent = m.content;
         div.appendChild(bub);
       }
       if (m.logs && m.logs.length) {
@@ -713,6 +749,7 @@ DELETE /file.cs
         logsDiv.className = 'logs';
         m.logs.forEach(l => {
           const line = document.createElement('div');
+          line.className = 'log-entry';
           line.textContent = l;
           logsDiv.appendChild(line);
         });
@@ -729,11 +766,36 @@ DELETE /file.cs
     renderMessages();
   }
 
+  function showTyping() {
+    const div = document.createElement('div');
+    div.className = 'msg assistant';
+    div.id = 'typing-indicator';
+    div.innerHTML = `
+      <div class="author">PPG Assistant</div>
+      <div class="typing-indicator">
+        <span>Думаю</span>
+        <div class="dots">
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+        </div>
+      </div>
+    `;
+    messagesEl.appendChild(div);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  }
+
+  function hideTyping() {
+    const el = document.getElementById('typing-indicator');
+    if (el) el.remove();
+  }
+
   function parseVFSCommands(text) {
     const regex = /```vfs\s*\n([\s\S]*?)\n```/g;
     let match;
     const logs = [];
     let clean = text.replace(regex, '').trim();
+    
     while ((match = regex.exec(text)) !== null) {
       const block = match[1].trim();
       const lines = block.split('\n');
@@ -742,7 +804,7 @@ DELETE /file.cs
         const path = cmd.replace('WRITE ', '').trim();
         const content = lines.slice(1).join('\n');
         setFile(path, content);
-        logs.push('⚙️ Сохранён: ' + path);
+        logs.push('✅ Сохранён: ' + path);
       } else if (cmd.startsWith('DELETE ')) {
         const path = cmd.replace('DELETE ', '').trim();
         deleteFile(path);
@@ -752,7 +814,6 @@ DELETE /file.cs
     return { cleanText: clean, logs };
   }
 
-  // --- Send ---
   async function handleSend() {
     const text = inputBox.value.trim();
     if ((!text && !activeAttachment) || isWaiting) return;
@@ -773,14 +834,19 @@ DELETE /file.cs
 
     addMessage('user', text, [], imgData?.dataUrl || null);
     isWaiting = true;
+    sendBtn.disabled = true;
+
+    const thinkMode = thinkModeCheckbox.checked;
+    if (thinkMode) {
+      showTyping();
+    }
 
     try {
       const files = getFlatFiles(fs);
       const fsContext = '[Текущие файлы мода]:\n' + (files.map(f => f.path).join('\n') || '(пусто)');
-      const targetModel = (selectedModel === 'custom') ? customModel : selectedModel;
+      const targetModel = customModel || 'gemini-2.5-flash';
       if (!targetModel) throw new Error('Укажите модель в настройках.');
 
-      const thinkMode = thinkModeCheckbox.checked;
       const systemInstruction = getSystemInstruction(thinkMode);
 
       let rawAnswer = '';
@@ -834,11 +900,12 @@ DELETE /file.cs
         rawAnswer = data.choices?.[0]?.message?.content || '';
       }
 
-      // Извлекаем план, если есть
+      hideTyping();
+
       let planText = '';
       let codeText = rawAnswer;
+      
       if (thinkMode) {
-        // Ищем план в формате "- пункт" в начале ответа
         const lines = rawAnswer.split('\n');
         let planLines = [];
         let i = 0;
@@ -854,16 +921,26 @@ DELETE /file.cs
         }
       }
 
-      const { cleanText, logs } = parseVFSCommands(codeText);
-      // Если есть план, показываем его как отдельное сообщение с пометкой isPlan
       if (planText) {
         addMessage('assistant', planText, [], null, true);
       }
-      addMessage('assistant', cleanText || 'Готово.', logs);
+
+      const { cleanText, logs } = parseVFSCommands(codeText);
+      
+      if (cleanText) {
+        addMessage('assistant', cleanText, logs);
+      } else if (logs.length > 0) {
+        addMessage('assistant', '✅ Все файлы созданы!', logs);
+      } else {
+        addMessage('assistant', '✅ Готово!');
+      }
+
     } catch (e) {
+      hideTyping();
       addMessage('assistant', '❌ Ошибка: ' + e.message);
     } finally {
       isWaiting = false;
+      sendBtn.disabled = false;
     }
   }
 
@@ -909,9 +986,6 @@ DELETE /file.cs
   modelDropdown.onclick = function(e) {
     const opt = e.target.closest('.opt');
     if (!opt) return;
-    selectedModel = opt.dataset.model;
-    localStorage.setItem('app_model', selectedModel);
-    currentModelLabel.textContent = (selectedModel === 'custom' && customModel) ? customModel : opt.textContent.trim();
     document.querySelectorAll('.opt').forEach(o => o.classList.toggle('selected', o === opt));
     modelDropdown.classList.remove('open');
   };
@@ -930,9 +1004,6 @@ DELETE /file.cs
     localStorage.setItem('app_api_key', apiKey);
     localStorage.setItem('app_base_url', baseUrl);
     localStorage.setItem('app_custom_model', customModel);
-    if (selectedModel === 'custom') {
-      currentModelLabel.textContent = customModel || 'custom';
-    }
     modalOverlay.classList.remove('open');
   };
 
@@ -975,11 +1046,11 @@ DELETE /file.cs
     renderMessages();
     renderFileList();
     document.querySelectorAll('.opt').forEach(o => {
-      if (o.dataset.model === selectedModel) {
+      if (o.dataset.model === 'custom') {
         o.classList.add('selected');
-        currentModelLabel.textContent = (selectedModel === 'custom' && customModel) ? customModel : o.textContent.trim();
       }
     });
+    currentModelLabel.textContent = customModel || 'Кастомная модель';
     closePreviewPanel();
     console.log('PPG Mod Studio AI готов!');
   }
