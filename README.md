@@ -1,158 +1,155 @@
-🎮 PPG Mod Studio AI
+# 🎨 PPG Mod Studio
 <div align="center">
-https://img.shields.io/badge/%D0%B2%D0%B5%D1%80%D1%81%D0%B8%D1%8F-1.0.0-blue?style=for-the-badge
-https://img.shields.io/badge/%D1%81%D1%82%D0%B0%D1%82%D1%83%D1%81-%D0%B0%D0%BA%D1%82%D0%B8%D0%B2%D0%B5%D0%BD-success?style=for-the-badge
-https://img.shields.io/badge/%D0%BB%D0%B8%D1%86%D0%B5%D0%BD%D0%B7%D0%B8%D1%8F-MIT-green?style=for-the-badge
-https://img.shields.io/badge/AI-Gemini-4285F4?style=for-the-badge&logo=google&logoColor=white
-
-✨ Интерактивная студия для создания модов к People Playground с ИИ-помощником
+https://img.shields.io/badge/version-1.0.0-blue.svg?style=for-the-badge
+https://img.shields.io/badge/license-MIT-green.svg?style=for-the-badge
+https://img.shields.io/badge/status-active-success.svg?style=for-the-badge
+https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=for-the-badge
+https://img.shields.io/badge/platform-Windows%2520%257C%2520Linux%2520%257C%2520macOS-lightgrey?style=for-the-badge
 
 </div>
 📖 О проекте
-PPG Mod Studio AI — это веб-приложение (один HTML-файл) для разработки модов к игре People Playground с интеграцией Google Gemini AI.
+PPG Mod Studio — это профессиональная среда разработки (IDE) для создания, редактирования и управления модификациями к игре PPG. Инструмент предоставляет удобный интерфейс и мощный функционал для моддеров любого уровня подготовки.
 
-Просто опишите механику мода на русском языке, а ИИ сгенерирует C# код и структуру файлов. Всё управление файлами — через удобный интерфейс с боковой панелью.
+⚡ Статус: Активная разработка
 
 ✨ Возможности
-Функция	Описание
-🤖 ИИ-помощник	Общайтесь с Gemini на русском, описывайте механику мода
-📁 Файловый менеджер	Встроенная файловая система с созданием/удалением файлов
-🧠 VFS-команды	ИИ автоматически сохраняет файлы через специальные блоки WRITE/DELETE
-📦 Экспорт в ZIP	Скачивайте готовый мод одним кликом
-🔌 Гибкие API	Поддержка Google Gemini, OpenRouter, любых OpenAI-совместимых прокси
-🖼️ Загрузка изображений	Прикрепляйте референсы и скриншоты к запросам
-💾 Локальное сохранение	Все данные (чат, файлы, настройки) сохраняются в браузере
+🛠️ Редактор модов
+Визуальный редактор ресурсов
+
+Редактирование игровых параметров
+
+Работа с текстурами и звуками
+
+Поддержка Lua-скриптов
+
+📦 Управление проектами
+Система управления зависимостями
+
+Встроенный менеджер пакетов
+
+Шаблоны проектов
+
+История изменений
+
+🎮 Игровая интеграция
+Поддержка актуальной версии PPG
+
+Быстрая загрузка модов
+
+Режим отладки
+
+Автоматическое обновление
+
+🔧 Инструменты разработчика
+Встроенный компилятор
+
+Отладчик скриптов
+
+Профилировщик производительности
+
+Генератор документации
+
+🎨 Интерфейс
+Интуитивно понятный UI/UX
+
+Настраиваемая тема оформления
+
+Горячие клавиши
+
+Мультиязычность
+
 🚀 Быстрый старт
-1. Клонируйте репозиторий
+Установка
 bash
-git clone https://github.com/iljalepmets12-stack/ppg-mod-studio.git
+# Клонирование репозитория
+git clone https://github.com/yourname/ppg-mod-studio.git
+
+# Переход в директорию проекта
 cd ppg-mod-studio
-2. Откройте index.html
+
+# Установка зависимостей
+npm install
+Запуск
 bash
-# Windows
-start index.html
+# Запуск в режиме разработки
+npm start
 
-# macOS
-open index.html
+# Сборка проекта
+npm run build
 
-# Linux
-xdg-open index.html
-3. Настройте API ключ
-Нажмите ⚙ Настройки в правом верхнем углу
+# Запуск тестов
+npm test
+Первый проект
+Нажмите Create New Project
 
-Вставьте API ключ:
+Выберите шаблон мода
 
-Для Gemini: AIzaSy... (получить на Google AI Studio)
+Настройте параметры проекта
 
-Для OpenRouter: sk-... (получить на OpenRouter)
+Начните редактирование
 
-Выберите модель в выпадающем списке
+📚 Документация
+Для пользователей
+Руководство пользователя
 
-4. Начинайте творить!
-Напишите в чат, какой мод хотите создать, и ИИ поможет вам!
+Часто задаваемые вопросы
 
-🧠 Как это работает
-Архитектура
-text
-Вы → Чат → Gemini AI → VFS-команды → Файлы мода → 📦 ZIP
-VFS-команды (Virtual File System)
-ИИ использует специальные блоки в ответах для управления файлами:
+Видеоуроки
 
-markdown
-```vfs
-WRITE /mod.json
-{
-  "Name": "Мой мод",
-  "Author": "Ваше имя",
-  "Description": "Описание мода",
-  "ModVersion": "1.0",
-  "GameVersion": "1.26+",
-  "EntryPoint": "Mod.Main"
-}
-```
+Для разработчиков
+API Reference
 
-```vfs
-WRITE /Main.cs
-using UnityEngine;
+Архитектура проекта
 
-namespace Mod
-{
-    public class Main
-    {
-        public static void Main()
-        {
-            // Ваш код
-        }
-    }
-}
-```
+Руководство по контрибуции
 
-```vfs
-DELETE /OldScript.cs
-```
-Все созданные файлы появляются в боковой панели "Файлы мода".
+🛠️ Технологический стек
+Технология	Назначение
+Electron	Фреймворк для десктопного приложения
+React	UI-библиотека
+TypeScript	Основной язык программирования
+Webpack	Сборщик модулей
+Node.js	Backend-платформа
+🤝 Как помочь проекту
+Мы приветствуем любой вклад в развитие проекта!
 
-🛠️ Поддерживаемые модели
-Модель	API	Настройка
-gemini-2.5-flash	Google Gemini	По умолчанию
-gemini-2.5-pro	Google Gemini	Выбрать в меню
-Любая кастомная	OpenRouter / OpenAI	Выбрать "Кастомная модель" + указать ID
-Пример для OpenRouter:
-text
-Base URL: https://openrouter.ai/api/v1
-API Key: sk-...
-Модель: google/gemini-2.5-flash-exp:free
-📂 Структура проекта
-text
-ppg-mod-studio/
-├── 📄 index.html          # Полное приложение (всё в одном файле)
-├── 📄 README.md           # Документация
-└── 📄 LICENSE             # Лицензия
-Проект — это один HTML-файл с встроенными стилями и JavaScript.
+Способы участия:
+⭐ Звезда на GitHub
 
-🎯 Пример использования
-Напишите в чат:
+🐛 Сообщение об ошибках
 
-"Создай мод, который добавляет взрывающуюся палку. При клике ПКМ она через 2 секунды взрывается с радиусом 5."
+💡 Предложение новых функций
 
-ИИ сгенерирует:
+📝 Улучшение документации
 
-mod.json — манифест мода
+💻 Pull Request с кодом
 
-Main.cs — C# скрипт с логикой взрыва
-
-Дополнительные файлы при необходимости
-
-Нажмите 📦 "Скачать мод (.zip)" — готовый мод для установки в игру!
-
-⚙️ Настройки
-Параметр	Описание
-API Key	Ключ от Google Gemini (AIzaSy...) или OpenRouter (sk-...)
-Base URL	Для прокси (оставьте пустым для оригинального Gemini)
-Кастомная модель	ID модели, если выбрана "Кастомная модель"
-🛠️ Разработка и вклад
-Хотите улучшить проект?
-
+Процесс контрибуции:
 Форкните репозиторий
 
-Внесите изменения в index.html
+Создайте ветку для фичи (git checkout -b feature/AmazingFeature)
 
-Проверьте работу
+Зафиксируйте изменения (git commit -m 'Add AmazingFeature')
 
-Отправьте Pull Request
+Отправьте в ветку (git push origin feature/AmazingFeature)
 
-Идеи для улучшения:
-□ Поддержка нескольких языков интерфейса
-□ Готовые шаблоны модов (оружие, предметы, механики)
-□ Визуальный редактор спрайтов
-□ История версий файлов
-□ Экспорт в готовый .dll
+Откройте Pull Request
+
 📄 Лицензия
-Распространяется под лицензией MIT. Подробности в файле LICENSE.
+Проект распространяется под лицензией MIT. Подробнее в файле LICENSE.
 
-📬 Контакты
+📞 Контакты
 <div align="center">
-https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white
+https://img.shields.io/badge/Discord-7289DA?style=for-the-badge&logo=discord&logoColor=white
+https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white
+https://img.shields.io/badge/YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white
 
 </div>
-<div align="center"> <sub>Сделано с ❤️ для сообщества People Playground</sub> </div>
+🙏 Благодарности
+Всем контрибьюторам проекта
+
+Команде разработчиков PPG
+
+Сообществу моддеров
+
+<div align="center"> <sub>Сделано с ❤️ для сообщества PPG</sub> </div>
