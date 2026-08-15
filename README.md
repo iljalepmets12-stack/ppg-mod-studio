@@ -4,14 +4,15 @@
 
 **Профессиональная среда разработки (IDE) и AI-ассистент для создания модификаций к People Playground**
 
-[![Version](https://img.shields.io/badge/version-1.0.0-4f86f7.svg?style=for-the-badge&logo=git&logoColor=white)](https://github.com/yourname/ppg-mod-studio)
+[![Live Demo](https://img.shields.io/badge/Live_Demo-GitHub_Pages-4f86f7.svg?style=for-the-badge&logo=github&logoColor=white)](https://iljalepmets12-stack.github.io/ppg-mod-studio/)
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg?style=for-the-badge&logo=git&logoColor=white)](https://github.com/iljalepmets12-stack/ppg-mod-studio)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg?style=for-the-badge)](LICENSE)
-[![Status: Active](https://img.shields.io/badge/status-active-success.svg?style=for-the-badge)](https://github.com/yourname/ppg-mod-studio)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=for-the-badge)](CONTRIBUTING.md)
+[![Status: Active](https://img.shields.io/badge/status-active-success.svg?style=for-the-badge)](https://github.com/iljalepmets12-stack/ppg-mod-studio)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=for-the-badge)](https://github.com/iljalepmets12-stack/ppg-mod-studio/pulls)
 
-[![Platform Support](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey?style=for-the-badge&logo=electron&logoColor=white)](#)
+[![Platform Support](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux%20%7C%20Web-lightgrey?style=for-the-badge&logo=electron&logoColor=white)](#)
 
-[📜 Документация](#-документация) • [🚀 Быстрый старт](#-быстрый-старт) • [✨ Возможности](#-возможности) • [🤝 Сообщество](#-как-помочь-проекту)
+[🌐 Запустить в браузере (GitHub Pages)](https://iljalepmets12-stack.github.io/ppg-mod-studio/) • [🚀 Быстрый старт](#-быстрый-старт) • [✨ Возможности](#-возможности) • [🤝 Сообщество](#-как-помочь-проекту)
 
 </div>
 
@@ -19,9 +20,11 @@
 
 ## 📖 О проекте
 
-**PPG Mod Studio** — это мощная и удобная среда разработки (IDE), созданная специально для мододелов **People Playground (PPG)**. Инструмент совмещает в себе визуальный редактор ресурсов, встроенный VFS-менеджер файлов и AI-генератор C#-скриптов с поддержкой умных моделей и режимом планирования (Think Mode).
+**PPG Mod Studio** — это удобная и мощная среда разработки (IDE), созданная специально для мододелов **People Playground (PPG)**. Инструмент совмещает в себе визуальный редактор ресурсов, встроенный VFS-менеджер файлов и AI-генератор C#-скриптов с поддержкой умных моделей и режимом планирования (Think Mode).
 
-Будь вы новичок или опытный разработчик, PPG Mod Studio позволяет проектировать, отлаживать и экспортировать готовые моды в один клик.
+Вы можете работать с приложением как в браузерной версии через GitHub Pages, так и локально.
+
+👉 **[Запустить прямо в браузере (Live Demo)](https://iljalepmets12-stack.github.io/ppg-mod-studio/)**
 
 ---
 
@@ -36,7 +39,7 @@
 ### 📦 Управление проектами
 - **Экспорт в ZIP**: Быстрое скачивание готовой структуры мода (`.cs`, `mod.json` и др.) в один клик.
 - **Файловый менеджер (VFS)**: Интерактивный список файлов с предпросмотром, быстрым удалением и созданием.
-- **История изменений**: Автоматическое сохранение сессий и файловой структуры в локальное хранилище.
+- **История изменений**: Автоматическое сохранение сессий и файловой структуры в локальное хранилище браузера.
 
 ### 🎮 Игровая интеграция & Инструменты
 - **Поддержка актуальных версий PPG**: Полное соответствие API игры People Playground.
@@ -49,23 +52,21 @@
 
 | Технология | Назначение |
 | :--- | :--- |
-| **Electron** | Кроссплатформенный фреймворк десктопного приложения |
-| **React / HTML5** | Современный динамический интерфейс пользователя (UI/UX) |
-| **TypeScript / JS** | Основной язык разработки приложения |
+| **HTML5 / JavaScript** | Веб-интерфейс приложения и логика VFS |
 | **JSZip** | Генерация и архивация готовых модов в `.zip` |
 | **Google Gemini API** | Нейросетевое ядро для кодогенерации модов |
+| **GitHub Pages** | Хостинг веб-версии приложения |
 
 ---
 
 ## 🚀 Быстрый старт
 
-### Требования
-- **Node.js**: v16.0.0 или выше
-- **npm** или **yarn**
+### Веб-версия
+Просто перейдите по ссылке: [iljalepmets12-stack.github.io/ppg-mod-studio](https://iljalepmets12-stack.github.io/ppg-mod-studio/)
 
-### Установка и запуск
+### Локальный запуск и разработка
 
 1. **Клонируйте репозиторий:**
    ```bash
-   git clone [https://github.com/yourname/ppg-mod-studio.git](https://github.com/yourname/ppg-mod-studio.git)
+   git clone [https://github.com/iljalepmets12-stack/ppg-mod-studio.git](https://github.com/iljalepmets12-stack/ppg-mod-studio.git)
    cd ppg-mod-studio
