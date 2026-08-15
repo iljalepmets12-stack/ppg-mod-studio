@@ -62,11 +62,4 @@
 ## 🚀 Быстрый старт
 
 ### Веб-версия
-Просто перейдите по ссылке: [iljalepmets12-stack.github.io/ppg-mod-studio](https://iljalepmets12-stack.github.io/ppg-mod-studio/)
-
-### Локальный запуск и разработка
-
-1. **Клонируйте репозиторий:**
-   ```bash
-   git clone [https://github.com/iljalepmets12-stack/ppg-mod-studio.git](https://github.com/iljalepmets12-stack/ppg-mod-studio.git)
-   cd ppg-mod-studio
+Просто перейдите по ссылке: [iljalepmets12-stack.github.io/ppg-mod-studio](https://iljalepmets12-stack.github.io/ppg-mod-studio/
