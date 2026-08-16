@@ -5,7 +5,7 @@
 **Профессиональная веб-среда разработки (IDE) и AI-ассистент для создания модификаций к People Playground**
 
 [![Live Demo](https://img.shields.io/badge/Live_Demo-GitHub_Pages-4f86f7.svg?style=for-the-badge&logo=github&logoColor=white)](https://iljalepmets12-stack.github.io/ppg-mod-studio/)
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg?style=for-the-badge&logo=git&logoColor=white)](https://github.com/iljalepmets12-stack/ppg-mod-studio)
+[![Version](https://img.shields.io/badge/version-2.0.0-blue.svg?style=for-the-badge&logo=git&logoColor=white)](https://github.com/iljalepmets12-stack/ppg-mod-studio)
 [![Status: Active](https://img.shields.io/badge/status-active-success.svg?style=for-the-badge)](https://github.com/iljalepmets12-stack/ppg-mod-studio)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=for-the-badge)](https://github.com/iljalepmets12-stack/ppg-mod-studio/pulls)
 
