@@ -792,7 +792,7 @@
     let sessionOnly = localStorage.getItem('app_session_only_key') === 'true';
     let apiKey = sessionOnly ? (sessionStorage.getItem('app_api_key') || '') : (localStorage.getItem('app_api_key') || '');
     let baseUrl = localStorage.getItem('app_base_url') || '';
-    let customModel = localStorage.getItem('app_custom_model') || 'gemini-2.5-flash';
+    let customModel = (localStorage.getItem('app_custom_model') || 'gemini-2.5-flash').replace(/^models\//, '');
     let currentTheme = localStorage.getItem('app_theme') || 'space';
 
     let selectedFilePath = null;
@@ -1091,7 +1091,7 @@
     saveSettingsBtn.onclick = () => {
       apiKey = apiKeyInput.value.trim();
       baseUrl = baseUrlInput.value.trim();
-      customModel = customModelInput.value.trim();
+      customModel = customModelInput.value.trim().replace(/^models\//, '') || 'gemini-2.5-flash';
       sessionOnly = sessionOnlyCheckbox.checked;
 
       localStorage.setItem('app_session_only_key', sessionOnly);
@@ -1336,7 +1336,7 @@
         if (!endpoint.startsWith('http://') && !endpoint.startsWith('https://')) {
           endpoint = 'https://' + endpoint;
         }
-        const modelToUse = (customModel || 'gemini-2.5-flash').trim();
+        let modelToUse = (customModel || 'gemini-2.5-flash').trim().replace(/^models\//, '');
         const isThink = thinkModeCheckbox.checked;
         
         const systemPrompt = `You are PPG Mod Studio AI, an expert C# and modding assistant for People Playground (PPG).
