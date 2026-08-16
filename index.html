@@ -3,1059 +3,1447 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PPG Mod Studio AI</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛠</text></svg>">
+  <title>PPG Mod Studio AI Beta 2.0</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚙️</text></svg>">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  
   <style>
-    * { margin:0; padding:0; box-sizing:border-box; font-family:'Inter',system-ui,-apple-system,sans-serif; }
+    :root {
+      --bg-base: #0a0e1a;
+      --bg-panel: rgba(20, 25, 40, 0.75);
+      --bg-card: rgba(30, 38, 58, 0.6);
+      --border-color: rgba(255, 255, 255, 0.08);
+      --accent-color: #4f86f7;
+      --accent-glow: rgba(79, 134, 247, 0.35);
+      --text-main: #f0f4f9;
+      --text-muted: #8a9bb5;
+      --code-bg: #141824;
+      --thinking-bg: rgba(251, 191, 36, 0.08);
+      --thinking-border: #fbbf24;
+    }
+
+    /* AMOLED Theme */
+    body.theme-amoled {
+      --bg-base: #000000;
+      --bg-panel: #0a0a0a;
+      --bg-card: #121212;
+      --border-color: #222222;
+      --accent-color: #3b82f6;
+      --accent-glow: rgba(59, 130, 246, 0.2);
+      --text-main: #ffffff;
+      --text-muted: #666666;
+      --code-bg: #050505;
+    }
+
+    /* Town Theme */
+    body.theme-town {
+      --bg-base: #1a1c23;
+      --bg-panel: rgba(32, 36, 45, 0.85);
+      --bg-card: rgba(44, 50, 64, 0.7);
+      --border-color: rgba(255, 255, 255, 0.1);
+      --accent-color: #f59e0b;
+      --accent-glow: rgba(245, 158, 11, 0.3);
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --code-bg: #111318;
+    }
+
+    /* Modern Switch Control */
+    .switch-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--text-muted);
+      cursor: pointer;
+      user-select: none;
+    }
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 36px;
+      height: 20px;
+    }
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: rgba(255, 255, 255, 0.2);
+      transition: .25s ease;
+      border-radius: 20px;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 14px;
+      width: 14px;
+      left: 3px;
+      bottom: 3px;
+      background-color: #fff;
+      transition: .25s ease;
+      border-radius: 50%;
+    }
+    input:checked + .slider {
+      background-color: var(--accent-color);
+    }
+    input:checked + .slider:before {
+      transform: translateX(16px);
+    }
+
+    /* Toast Container */
+    #toastContainer {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: none;
+    }
+    .toast {
+      pointer-events: auto;
+      padding: 10px 16px;
+      border-radius: 10px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      font-size: 13px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+      backdrop-filter: blur(12px);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      animation: toastIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      max-width: 360px;
+    }
+    .toast.error { border-color: rgba(239, 68, 68, 0.5); color: #fca5a5; }
+    .toast.success { border-color: rgba(34, 197, 94, 0.5); color: #86efac; }
+    .toast.warning { border-color: rgba(245, 158, 11, 0.5); color: #fde68a; }
+    @keyframes toastIn {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+    
     body {
-      background: #0a0e1a;
-      color: #e2e8f0;
+      background-color: var(--bg-base);
+      color: var(--text-main);
       height: 100vh;
       display: flex;
       flex-direction: column;
       overflow: hidden;
+      transition: background-color 0.3s ease;
     }
-    ::-webkit-scrollbar { width: 4px; }
-    ::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
-    ::-webkit-scrollbar-thumb { background: rgba(79,134,247,0.3); border-radius: 4px; }
+
+    #spaceCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.3); }
 
     .top-bar {
       height: 56px;
-      border-bottom: 1px solid rgba(255,255,255,0.04);
+      border-bottom: 1px solid var(--border-color);
       display: flex;
       align-items: center;
       justify-content: space-between;
       padding: 0 20px;
-      background: rgba(0,0,0,0.3);
-      backdrop-filter: blur(8px);
-      flex-shrink: 0;
+      background: var(--bg-panel);
+      backdrop-filter: blur(12px);
       z-index: 10;
+      flex-shrink: 0;
     }
-    .top-bar .brand {
+
+    .brand {
       font-size: 16px;
       font-weight: 700;
-      color: #e2e8f0;
-      letter-spacing: 0.3px;
-    }
-    .top-bar .brand span {
-      color: #4f86f7;
-    }
-    .top-bar .actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-    .top-bar .actions button {
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.06);
-      color: #8a9bb5;
-      padding: 6px 12px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 13px;
-      transition: all 0.2s;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .top-bar .actions button:hover { color: #fff; background: rgba(255,255,255,0.08); }
-    .top-bar .actions button.primary {
-      background: linear-gradient(135deg, #4f86f7, #2563eb);
-      color: #fff;
-      border: none;
-    }
-    .top-bar .actions button.primary:hover { box-shadow: 0 0 20px rgba(79,134,247,0.4); }
-
-    .model-selector { position: relative; display: inline-block; }
-    .model-selector .selected {
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.06);
-      padding: 5px 14px;
-      border-radius: 8px;
-      color: #c8d0e0;
-      font-size: 13px;
-      cursor: pointer;
+      letter-spacing: 0.5px;
       display: flex;
       align-items: center;
       gap: 8px;
     }
-    .model-selector .dropdown {
-      position: absolute;
-      top: calc(100% + 6px);
-      left: 0;
-      width: 220px;
-      background: rgba(24,28,40,0.95);
-      backdrop-filter: blur(16px);
-      border: 1px solid rgba(255,255,255,0.06);
-      border-radius: 12px;
-      padding: 6px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.6);
-      display: none;
-      flex-direction: column;
-      gap: 2px;
-      z-index: 20;
-    }
-    .model-selector .dropdown.open { display: flex; }
-    .model-selector .dropdown .opt {
-      padding: 8px 12px;
+    .brand span { color: var(--accent-color); }
+
+    .top-bar-actions { display: flex; gap: 10px; align-items: center; }
+
+    button {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 7px 14px;
       border-radius: 8px;
       cursor: pointer;
-      transition: 0.2s;
-    }
-    .model-selector .dropdown .opt:hover { background: rgba(255,255,255,0.06); }
-    .model-selector .dropdown .opt.selected {
-      background: rgba(79,134,247,0.12);
-      border: 1px solid rgba(79,134,247,0.2);
-      color: #6e8ff7;
-    }
-
-    .switch-label {
-      display: flex;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      display: inline-flex;
       align-items: center;
       gap: 6px;
-      font-size: 12px;
-      color: #8a9bb5;
-      cursor: pointer;
-      user-select: none;
     }
-    .switch-label input[type="checkbox"] {
-      appearance: none;
-      width: 32px;
-      height: 18px;
-      background: rgba(255,255,255,0.1);
-      border-radius: 10px;
-      border: 1px solid rgba(255,255,255,0.06);
-      position: relative;
-      cursor: pointer;
-      transition: all 0.2s;
-      flex-shrink: 0;
+    button:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.2);
     }
-    .switch-label input[type="checkbox"]:checked {
-      background: rgba(79,134,247,0.4);
-      border-color: rgba(79,134,247,0.3);
+    button.btn-primary {
+      background: var(--accent-color);
+      border: none;
+      color: #fff;
     }
-    .switch-label input[type="checkbox"]::after {
-      content: '';
-      position: absolute;
-      top: 2px;
-      left: 2px;
-      width: 12px;
-      height: 12px;
-      background: #fff;
-      border-radius: 50%;
-      transition: all 0.2s;
-    }
-    .switch-label input[type="checkbox"]:checked::after {
-      left: 16px;
-      background: #fff;
+    button.btn-primary:hover {
+      box-shadow: 0 0 15px var(--accent-glow);
+      opacity: 0.9;
     }
 
-    .main-layout { display: flex; flex: 1; overflow: hidden; }
+    .main-layout {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+      z-index: 1;
+    }
 
     .sidebar {
-      width: 260px;
-      background: rgba(24,28,40,0.6);
-      backdrop-filter: blur(8px);
-      border-right: 1px solid rgba(255,255,255,0.04);
+      width: 280px;
+      background: var(--bg-panel);
+      backdrop-filter: blur(10px);
+      border-right: 1px solid var(--border-color);
       display: flex;
       flex-direction: column;
-      padding: 12px 14px;
+      padding: 14px;
       flex-shrink: 0;
-      overflow: hidden;
     }
-    .sidebar .header {
-      font-size: 11px;
+
+    .sidebar-header {
+      font-size: 12px;
       font-weight: 700;
-      color: #4a5a7a;
+      color: var(--text-muted);
       text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-bottom: 10px;
+      letter-spacing: 0.8px;
+      margin-bottom: 12px;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
-    .sidebar .header button {
-      background: none;
-      border: none;
-      color: #4a5a7a;
-      cursor: pointer;
-      font-size: 14px;
-      transition: 0.2s;
+
+    .inspector-status {
+      padding: 8px 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
-    .sidebar .header button:hover { color: #ef4444; }
+    .inspector-status.valid { background: rgba(34, 197, 94, 0.12); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.2); }
+    .inspector-status.invalid { background: rgba(239, 68, 68, 0.12); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.2); }
+
     .file-list {
       flex: 1;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
-      gap: 3px;
+      gap: 4px;
     }
+
     .file-item {
-      padding: 6px 10px;
+      padding: 8px 12px;
       border-radius: 8px;
-      color: #7a8aa8;
+      color: var(--text-muted);
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      transition: all 0.15s;
       font-size: 13px;
-      font-family: 'Consolas', monospace;
+      font-family: monospace;
+      transition: all 0.15s;
     }
-    .file-item:hover { background: rgba(255,255,255,0.04); color: #fff; }
-    .file-item.active {
-      background: rgba(79,134,247,0.08);
-      border-left: 2px solid #4f86f7;
-      color: #fff;
-    }
-    .file-item .del {
-      color: #ef4444;
-      opacity: 0;
-      font-size: 14px;
-      cursor: pointer;
-      transition: 0.2s;
-    }
-    .file-item:hover .del { opacity: 0.6; }
+    .file-item:hover { background: rgba(255, 255, 255, 0.05); color: var(--text-main); }
+    .file-item.active { background: rgba(79, 134, 247, 0.15); color: #fff; border-left: 3px solid var(--accent-color); }
+    .file-item .del { opacity: 0; transition: opacity 0.2s; color: #ef4444; }
+    .file-item:hover .del { opacity: 0.8; }
     .file-item .del:hover { opacity: 1; }
-    .file-empty {
-      color: #3a4a6a;
-      font-size: 12px;
-      text-align: center;
-      margin-top: 30px;
-      font-style: italic;
-    }
 
     .chat-area {
       flex: 1;
       display: flex;
       flex-direction: column;
-      background: rgba(15,18,26,0.4);
       min-width: 0;
+      background: rgba(0, 0, 0, 0.15);
     }
+
     .messages {
       flex: 1;
       overflow-y: auto;
-      padding: 20px 24px;
+      padding: 20px;
       display: flex;
       flex-direction: column;
-      gap: 20px;
+      gap: 18px;
     }
+
     .msg {
       display: flex;
       flex-direction: column;
-      gap: 4px;
-      animation: fadeUp 0.3s ease;
+      gap: 6px;
+      max-width: 85%;
+      animation: fadeIn 0.25s ease-out;
     }
-    @keyframes fadeUp {
-      from { opacity:0; transform:translateY(12px); }
-      to { opacity:1; transform:translateY(0); }
-    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    .msg.user { align-self: flex-end; }
+    .msg.assistant { align-self: flex-start; max-width: 92%; }
+
     .msg .author {
       font-size: 11px;
-      font-weight: 700;
-      color: #4a5a7a;
-      text-transform: uppercase;
-      letter-spacing: 0.3px;
-    }
-    .msg .bubble {
-      font-size: 14px;
-      line-height: 1.6;
-      white-space: pre-wrap;
-      word-break: break-word;
-    }
-    .msg.user .bubble {
-      background: rgba(79,134,247,0.1);
-      border: 1px solid rgba(79,134,247,0.15);
-      padding: 12px 16px;
-      border-radius: 14px 14px 4px 14px;
-      color: #f0f3ff;
-      align-self: flex-end;
-      max-width: 85%;
-    }
-    .msg.assistant .bubble {
-      color: #e2e8f0;
-      max-width: 100%;
-    }
-    .msg.assistant .bubble.think-plan {
-      background: rgba(52,211,153,0.06);
-      border-left: 3px solid #6ee7b7;
-      padding: 10px 14px;
-      border-radius: 8px;
-      color: #c8d0e0;
-      font-size: 13px;
-      margin-bottom: 6px;
-    }
-    .msg.assistant .bubble.think-plan .plan-title {
       font-weight: 600;
-      color: #6ee7b7;
-      margin-bottom: 6px;
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    .msg .logs {
-      background: rgba(52,211,153,0.05);
-      border: 1px solid rgba(52,211,153,0.1);
-      color: #6ee7b7;
-      padding: 8px 12px;
-      border-radius: 8px;
-      font-size: 12px;
-      font-family: 'Consolas', monospace;
-      margin-top: 6px;
-    }
-    .msg .logs .log-entry {
-      padding: 2px 0;
-      border-bottom: 1px solid rgba(52,211,153,0.05);
-    }
-    .msg .logs .log-entry:last-child {
-      border-bottom: none;
+      color: var(--text-muted);
     }
 
-    .typing-indicator {
+    .msg.user .bubble {
+      background: var(--accent-color);
+      color: #fff;
+      padding: 12px 16px;
+      border-radius: 16px 16px 4px 16px;
+      font-size: 14px;
+      line-height: 1.5;
+      box-shadow: 0 4px 12px var(--accent-glow);
+    }
+
+    .msg.assistant .bubble-container {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      width: 100%;
+    }
+
+    .thinking-card {
+      background: var(--thinking-bg);
+      border: 1px solid var(--thinking-border);
+      border-radius: 14px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      box-shadow: 0 4px 12px rgba(251, 191, 36, 0.05);
+    }
+    .thinking-icon {
+      width: 24px;
+      height: 24px;
+      flex-shrink: 0;
+      animation: pulse 2s infinite ease-in-out;
+    }
+    @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.6; transform: scale(0.92); } }
+
+    .thinking-title {
+      font-weight: 700;
+      color: #fbbf24;
+      font-size: 13px;
+      margin-bottom: 4px;
+    }
+    .thinking-plan-text {
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--text-main);
+    }
+
+    .text-content-block {
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--text-main);
+    }
+
+    .inline-code {
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 2px 6px;
+      border-radius: 5px;
+      font-family: 'Consolas', monospace;
+      font-size: 0.88em;
+      color: #93c5fd;
+    }
+
+    .md-header {
+      font-size: 15px;
+      font-weight: 700;
+      margin-top: 10px;
+      margin-bottom: 6px;
+      color: var(--accent-color);
+      display: block;
+    }
+
+    .code-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+    .code-card-header {
+      padding: 12px 16px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      background: rgba(255, 255, 255, 0.02);
+      user-select: none;
+    }
+    .code-card-header:hover { background: rgba(255, 255, 255, 0.05); }
+    .code-card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .code-card-title {
+      font-weight: 600;
+      font-size: 14px;
       display: flex;
       align-items: center;
       gap: 8px;
-      padding: 8px 0;
-      color: #4a5a7a;
-      font-size: 13px;
     }
-    .typing-indicator .dots {
-      display: flex;
-      gap: 4px;
+    .code-card-title img { width: 18px; height: 18px; }
+    .code-card-subtitle {
+      font-size: 11px;
+      color: var(--text-muted);
+      opacity: 0.7;
     }
-    .typing-indicator .dot {
-      width: 6px;
-      height: 6px;
-      background: #6ee7b7;
-      border-radius: 50%;
-      animation: bounce 1.4s infinite ease-in-out;
+    .code-card-body {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.35s cubic-bezier(0, 1, 0, 1);
+      padding: 0 14px;
     }
-    .typing-indicator .dot:nth-child(2) { animation-delay: 0.2s; }
-    .typing-indicator .dot:nth-child(3) { animation-delay: 0.4s; }
-    @keyframes bounce {
-      0%, 80%, 100% { transform: scale(0.6); opacity: 0.3; }
-      40% { transform: scale(1); opacity: 1; }
+    .code-card.open .code-card-body {
+      max-height: 1200px;
+      padding: 0 14px 14px 14px;
+      transition: max-height 0.5s ease-in-out;
+    }
+    .code-card .chevron { transition: transform 0.3s; font-size: 12px; }
+    .code-card.open .chevron { transform: rotate(180deg); }
+
+    .code-inner-box {
+      background: var(--code-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 12px;
+      font-family: 'Consolas', 'Fira Code', monospace;
+      font-size: 12.5px;
+      line-height: 1.5;
+      color: #e2e8f0;
+      overflow-x: auto;
+      white-space: pre;
     }
 
     .input-area {
-      padding: 12px 24px 20px;
-      background: linear-gradient(to top, rgba(15,18,26,0.95), transparent);
-      flex-shrink: 0;
-    }
-    .input-wrapper {
-      max-width: 820px;
-      margin: 0 auto;
-      background: rgba(24,28,40,0.7);
+      padding: 16px 20px;
+      background: var(--bg-panel);
       backdrop-filter: blur(12px);
-      border: 1px solid rgba(255,255,255,0.04);
-      border-radius: 18px;
-      padding: 10px 14px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      transition: all 0.3s;
+      border-top: 1px solid var(--border-color);
     }
-    .input-wrapper:focus-within {
-      border-color: rgba(79,134,247,0.2);
-      box-shadow: 0 0 40px rgba(79,134,247,0.03);
-    }
-    .input-row {
+    .attachment-preview-bar {
       display: flex;
-      align-items: flex-end;
       gap: 10px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
     }
-    .input-row textarea {
-      flex: 1;
-      background: none;
+    .attachment-thumb {
+      position: relative;
+      width: 60px;
+      height: 60px;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--accent-color);
+    }
+    .attachment-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .attachment-thumb .remove-btn {
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      background: rgba(0, 0, 0, 0.7);
+      color: #fff;
       border: none;
-      color: #f0f3ff;
-      font-size: 14px;
-      resize: none;
-      outline: none;
-      min-height: 24px;
-      max-height: 160px;
-      line-height: 1.6;
-      font-family: inherit;
-    }
-    .input-row textarea::placeholder { color: #3a4a6a; }
-    .input-row button {
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.06);
-      width: 36px;
-      height: 36px;
-      border-radius: 10px;
-      color: #8a9bb5;
+      border-radius: 50%;
+      width: 18px;
+      height: 18px;
+      font-size: 11px;
       cursor: pointer;
-      font-size: 16px;
       display: flex;
       align-items: center;
       justify-content: center;
-      flex-shrink: 0;
-      transition: 0.2s;
+      padding: 0;
     }
-    .input-row button:hover { color: #fff; background: rgba(255,255,255,0.08); }
-    .input-row button.send {
-      background: linear-gradient(135deg, #4f86f7, #2563eb);
+
+    .input-box-wrapper {
+      display: flex;
+      align-items: flex-end;
+      gap: 10px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 8px 12px;
+    }
+    .input-box-wrapper:focus-within { border-color: var(--accent-color); }
+    
+    textarea {
+      flex: 1;
+      background: transparent;
       border: none;
-      color: #fff;
-    }
-    .input-row button.send:hover { box-shadow: 0 0 20px rgba(79,134,247,0.4); transform: translateY(-2px); }
-    .input-row button.send:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-      transform: none;
+      outline: none;
+      color: var(--text-main);
+      font-size: 14px;
+      resize: none;
+      max-height: 150px;
+      min-height: 24px;
+      line-height: 1.4;
     }
 
     .preview-panel {
       width: 0;
-      overflow: hidden;
-      background: rgba(24,28,40,0.4);
-      backdrop-filter: blur(8px);
-      border-left: 1px solid rgba(255,255,255,0.04);
-      transition: width 0.3s ease;
-      flex-shrink: 0;
+      background: var(--bg-panel);
+      backdrop-filter: blur(12px);
+      border-left: 1px solid var(--border-color);
       display: flex;
       flex-direction: column;
+      transition: width 0.3s ease;
+      overflow: hidden;
     }
-    .preview-panel.open { width: 380px; padding: 16px; }
-    .preview-panel .preview-header {
+    .preview-panel.open { width: 450px; }
+
+    .preview-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border-color);
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 12px;
     }
-    .preview-panel .preview-header span {
-      font-size: 13px;
-      font-weight: 600;
-      color: #c8d0e0;
-    }
-    .preview-panel .preview-header button {
-      background: none;
-      border: none;
-      color: #4a5a7a;
-      cursor: pointer;
-      font-size: 16px;
-    }
-    .preview-panel .preview-content {
+
+    .editor-container {
       flex: 1;
-      overflow-y: auto;
-      background: rgba(0,0,0,0.2);
-      border-radius: 10px;
-      padding: 12px;
+      display: flex;
+      overflow: hidden;
       font-family: 'Consolas', monospace;
       font-size: 13px;
+    }
+    .line-numbers {
+      padding: 12px 8px;
+      color: var(--text-muted);
+      background: rgba(0, 0, 0, 0.2);
+      text-align: right;
+      user-select: none;
+      font-size: 12px;
       line-height: 1.5;
-      white-space: pre-wrap;
-      word-break: break-all;
-      color: #c8d0e0;
+    }
+    .editor-textarea {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #e2e8f0;
+      padding: 12px;
+      line-height: 1.5;
+      resize: none;
+      white-space: pre;
+      overflow: auto;
     }
 
     .modal-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.7);
-      backdrop-filter: blur(8px);
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(6px);
       display: none;
       align-items: center;
       justify-content: center;
       z-index: 100;
     }
     .modal-overlay.open { display: flex; }
+
     .modal {
-      background: rgba(24,28,40,0.95);
-      backdrop-filter: blur(20px);
-      border-radius: 20px;
-      padding: 28px;
-      width: 90%;
-      max-width: 440px;
-      border: 1px solid rgba(255,255,255,0.04);
-      box-shadow: 0 30px 80px rgba(0,0,0,0.6);
-      animation: slideUp 0.3s ease;
+      background: var(--bg-panel);
+      border: 1px solid var(--border-color);
+      border-radius: 18px;
+      width: 480px;
+      max-width: 90vw;
+      overflow: hidden;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
     }
-    @keyframes slideUp {
-      from { opacity:0; transform:translateY(20px) scale(0.96); }
-      to { opacity:1; transform:translateY(0) scale(1); }
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
-    .modal h3 { font-size:18px; margin-bottom:16px; color:#fff; }
-    .modal label {
-      font-size:11px; color:#4a5a7a; display:block; margin-top:14px; margin-bottom:5px;
-      text-transform:uppercase; letter-spacing:0.5px;
+    .modal-tabs {
+      display: flex;
+      background: rgba(0, 0, 0, 0.2);
+      border-bottom: 1px solid var(--border-color);
     }
-    .modal input {
-      width:100%; padding:10px 14px; background:rgba(255,255,255,0.04);
-      border:1px solid rgba(255,255,255,0.06); border-radius:10px;
-      color:#f0f3ff; outline:none; font-size:13px;
+    .modal-tabs .tab-btn {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 0;
+      background: transparent;
+      color: var(--text-muted);
+      justify-content: center;
     }
-    .modal input:focus { border-color:rgba(79,134,247,0.2); }
-    .modal-actions { display:flex; gap:10px; margin-top:24px; }
-    .modal-actions button {
-      flex:1; padding:10px; border:none; border-radius:10px; cursor:pointer;
-      font-weight:600; font-size:13px; transition:0.2s;
+    .modal-tabs .tab-btn.active {
+      color: var(--accent-color);
+      border-bottom: 2px solid var(--accent-color);
+      background: rgba(255, 255, 255, 0.02);
     }
-    .modal-actions .save-btn { background:linear-gradient(135deg,#4f86f7,#2563eb); color:#fff; }
-    .modal-actions .save-btn:hover { box-shadow:0 0 20px rgba(79,134,247,0.3); }
-    .modal-actions .cancel-btn { background:rgba(255,255,255,0.04); color:#8a9bb5; }
-    .modal-actions .cancel-btn:hover { background:rgba(255,255,255,0.08); }
+
+    .tab-content { padding: 20px; display: none; }
+    .tab-content.active { display: flex; flex-direction: column; gap: 14px; }
+
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group label { font-size: 12px; color: var(--text-muted); font-weight: 600; }
+    .form-group input {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 9px 12px;
+      border-radius: 8px;
+      outline: none;
+      font-size: 13px;
+    }
+    .form-group input:focus { border-color: var(--accent-color); }
+
+    .theme-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .theme-card {
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 12px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s;
+      background: var(--bg-card);
+    }
+    .theme-card.active { border-color: var(--accent-color); background: rgba(79, 134, 247, 0.15); }
+    .theme-card-icon { font-size: 20px; margin-bottom: 4px; }
+    .theme-card-title { font-size: 12px; font-weight: 600; }
   </style>
 </head>
-<body>
+<body class="theme-space">
 
-<div class="top-bar">
-  <div class="brand">PPG <span>Mod Studio</span></div>
-  <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
-    <div class="model-selector" id="modelSelector">
-      <div class="selected" id="modelSelectBtn">
-        <span id="currentModelLabel">Кастомная модель</span> ▾
-      </div>
-      <div class="dropdown" id="modelDropdown">
-        <div class="opt selected" data-model="custom">Кастомная модель</div>
-      </div>
+  <canvas id="spaceCanvas"></canvas>
+
+  <div class="top-bar">
+    <div class="brand">
+      <span>🛠️ PPG Mod Studio AI</span>
+      <small style="font-size: 10px; opacity: 0.6; font-weight: normal;">Beta 2.0</small>
     </div>
-    <label class="switch-label">
-      <input type="checkbox" id="thinkMode" checked /> 🧠 Think
-    </label>
-    <div class="actions">
-      <button class="primary" id="zipBtn">📦 ZIP</button>
-      <button id="settingsBtn">⚙</button>
-      <button id="clearBtn" style="color:#ef4444;">🗑</button>
+    <div class="top-bar-actions">
+      <label class="switch-label" title="Включить планирование и размышление перед кодом">
+        <div class="switch">
+          <input type="checkbox" id="thinkModeCheckbox" checked>
+          <span class="slider"></span>
+        </div>
+        <span>🧠 Think Mode</span>
+      </label>
+      <button id="exportZipBtn">📦 Экспорт ZIP</button>
+      <button id="settingsBtn">⚙️ Настройки</button>
+      <button id="clearChatBtn" style="color: #ef4444;">🗑️</button>
     </div>
   </div>
-</div>
 
-<div class="main-layout">
-  <div class="sidebar">
-    <div class="header">
-      <span>📁 Файлы мода</span>
-      <button id="deleteAllFiles" title="Удалить все файлы">✕</button>
+  <div class="main-layout">
+    <div class="sidebar">
+      <div class="sidebar-header">
+        <span>Инспектор Мода</span>
+        <button id="clearFsBtn" style="padding: 2px 6px; font-size: 10px;" title="Очистить VFS">✕</button>
+      </div>
+      <div id="inspectorStatus" class="inspector-status invalid">
+        <span>⚠️ Проверка структуры...</span>
+      </div>
+      <div class="sidebar-header" style="margin-top: 10px;">
+        <span>Файлы Проекта</span>
+      </div>
+      <div class="file-list" id="fileList"></div>
     </div>
-    <div class="file-list" id="fileList"></div>
-  </div>
 
-  <div class="chat-area">
-    <div class="messages" id="messages"></div>
-    <div class="input-area">
-      <div class="input-wrapper">
-        <div class="input-row">
-          <button id="attachBtn">📎</button>
-          <input type="file" id="fileInput" style="display:none;" />
-          <textarea id="inputBox" placeholder="Опишите механику мода... (Ctrl+Enter)"></textarea>
-          <button class="send" id="sendBtn">➤</button>
+    <div class="chat-area">
+      <div class="messages" id="messages"></div>
+      <div class="input-area">
+        <div id="attachmentPreview" class="attachment-preview-bar"></div>
+        <div class="input-box-wrapper">
+          <button id="attachBtn" title="Прикрепить файл или вставить из буфера">📎</button>
+          <input type="file" id="fileInput" accept="image/*,.cs,.json,.txt" style="display: none;" />
+          <textarea id="inputBox" placeholder="Опишите мод или вставьте скриншот из буфера (Ctrl+V)..."></textarea>
+          <button id="sendBtn" class="btn-primary">➤</button>
         </div>
       </div>
     </div>
-  </div>
 
-  <div class="preview-panel" id="previewPanel">
-    <div class="preview-header">
-      <span id="previewFileName">file.cs</span>
-      <button id="closePreview">✕</button>
-    </div>
-    <div class="preview-content" id="previewContent">(выберите файл)</div>
-  </div>
-</div>
-
-<div class="modal-overlay" id="modalOverlay">
-  <div class="modal">
-    <h3>⚙ Настройки API</h3>
-    <label>API Key</label>
-    <input type="password" id="apiKeyInput" placeholder="AIzaSy... или sk-..." />
-    <label>Base URL (пусто для Gemini)</label>
-    <input type="text" id="baseUrlInput" placeholder="https://openrouter.ai/api/v1" />
-    <label>Кастомная модель</label>
-    <input type="text" id="customModelInput" placeholder="google/gemini-2.0-flash-exp:free" />
-    <div class="modal-actions">
-      <button class="cancel-btn" id="closeModalBtn">Отмена</button>
-      <button class="save-btn" id="saveSettingsBtn">Сохранить</button>
-    </div>
-  </div>
-</div>
-
-<script>
-(function() {
-  // --- DOM refs ---
-  const messagesEl = document.getElementById('messages');
-  const inputBox = document.getElementById('inputBox');
-  const sendBtn = document.getElementById('sendBtn');
-  const fileList = document.getElementById('fileList');
-  const previewPanel = document.getElementById('previewPanel');
-  const previewContent = document.getElementById('previewContent');
-  const previewFileName = document.getElementById('previewFileName');
-  const closePreview = document.getElementById('closePreview');
-  const zipBtn = document.getElementById('zipBtn');
-  const settingsBtn = document.getElementById('settingsBtn');
-  const clearBtn = document.getElementById('clearBtn');
-  const deleteAllFilesBtn = document.getElementById('deleteAllFiles');
-  const modalOverlay = document.getElementById('modalOverlay');
-  const closeModalBtn = document.getElementById('closeModalBtn');
-  const saveSettingsBtn = document.getElementById('saveSettingsBtn');
-  const apiKeyInput = document.getElementById('apiKeyInput');
-  const baseUrlInput = document.getElementById('baseUrlInput');
-  const customModelInput = document.getElementById('customModelInput');
-  const modelSelectBtn = document.getElementById('modelSelectBtn');
-  const modelDropdown = document.getElementById('modelDropdown');
-  const currentModelLabel = document.getElementById('currentModelLabel');
-  const attachBtn = document.getElementById('attachBtn');
-  const fileInput = document.getElementById('fileInput');
-  const thinkModeCheckbox = document.getElementById('thinkMode');
-
-  // --- State ---
-  let apiKey = localStorage.getItem('app_api_key') || '';
-  let baseUrl = localStorage.getItem('app_base_url') || '';
-  let selectedModel = 'custom';
-  let customModel = localStorage.getItem('app_custom_model') || '';
-  let messages = JSON.parse(localStorage.getItem('app_messages') || '[]');
-  let fs = JSON.parse(localStorage.getItem('app_fs') || '{}');
-  let isWaiting = false;
-  let activeAttachment = null;
-  let selectedFilePath = null;
-
-  // --- System Instruction ---
-  function getSystemInstruction(thinkMode) {
-    let base = `Ты — эксперт C# разработчик модов для People Playground.
-Твоя задача — создавать рабочий код C# скриптов и манифест mod.json.
-
-ВАЖНО: Отвечай ТОЛЬКО в формате VFS-блоков. Каждый файл должен быть в отдельном блоке:
-\`\`\`vfs
-WRITE /путь/к/файлу.cs
-код файла
-\`\`\`
-
-Не пиши лишнего текста, только VFS-блоки.`;
-
-    if (thinkMode) {
-      base += `
-
-СНАЧАЛА покажи КРАТКИЙ ПЛАН действий в виде списка (используй "-" для каждого пункта). 
-План должен быть не более 5 пунктов.
-ЗАТЕМ сразу идут VFS-блоки с кодом.`;
-    }
-    return base;
-  }
-
-  // --- Helpers ---
-  function saveFs() {
-    localStorage.setItem('app_fs', JSON.stringify(fs));
-    renderFileList();
-  }
-  function saveMessages() {
-    localStorage.setItem('app_messages', JSON.stringify(messages));
-  }
-
-  function getFlatFiles(obj, path = '') {
-    let res = [];
-    for (let k in obj) {
-      let p = path ? path + '/' + k : k;
-      if (typeof obj[k] === 'string') res.push({ path: '/' + p, content: obj[k] });
-      else res.push(...getFlatFiles(obj[k], p));
-    }
-    return res;
-  }
-
-  function setFile(path, content) {
-    let parts = path.replace(/^\/+/, '').split('/');
-    let curr = fs;
-    for (let i = 0; i < parts.length - 1; i++) {
-      if (!curr[parts[i]] || typeof curr[parts[i]] !== 'object') curr[parts[i]] = {};
-      curr = curr[parts[i]];
-    }
-    curr[parts[parts.length - 1]] = content;
-    saveFs();
-  }
-
-  function deleteFile(path) {
-    let parts = path.replace(/^\/+/, '').split('/');
-    let curr = fs;
-    for (let i = 0; i < parts.length - 1; i++) {
-      if (!curr[parts[i]]) return;
-      curr = curr[parts[i]];
-    }
-    delete curr[parts[parts.length - 1]];
-    saveFs();
-  }
-
-  function deleteAllFiles() {
-    fs = {};
-    saveFs();
-    closePreviewPanel();
-  }
-
-  function renderFileList() {
-    const files = getFlatFiles(fs);
-    fileList.innerHTML = '';
-    if (!files.length) {
-      fileList.innerHTML = '<div class="file-empty">Нет файлов</div>';
-      return;
-    }
-    files.forEach(f => {
-      const div = document.createElement('div');
-      div.className = 'file-item' + (f.path === selectedFilePath ? ' active' : '');
-      const icon = f.path.endsWith('.cs') ? '📜' : (f.path.endsWith('.json') ? '⚙️' : '📄');
-      div.innerHTML = `<span>${icon} ${f.path}</span><span class="del" data-path="${f.path}">✕</span>`;
-      div.addEventListener('click', (e) => {
-        if (e.target.classList.contains('del')) return;
-        openPreview(f.path, f.content);
-      });
-      div.querySelector('.del').addEventListener('click', (e) => {
-        e.stopPropagation();
-        deleteFile(f.path);
-        if (selectedFilePath === f.path) closePreviewPanel();
-      });
-      fileList.appendChild(div);
-    });
-  }
-
-  function openPreview(path, content) {
-    selectedFilePath = path;
-    previewFileName.textContent = path;
-    previewContent.textContent = content || '(пусто)';
-    previewPanel.classList.add('open');
-    renderFileList();
-  }
-
-  function closePreviewPanel() {
-    selectedFilePath = null;
-    previewPanel.classList.remove('open');
-    renderFileList();
-  }
-
-  function renderMessages() {
-    messagesEl.innerHTML = '';
-    messages.forEach(m => {
-      const div = document.createElement('div');
-      div.className = 'msg ' + m.role;
-      const auth = document.createElement('div');
-      auth.className = 'author';
-      auth.textContent = m.role === 'user' ? 'Вы' : 'PPG Assistant';
-      div.appendChild(auth);
-      if (m.image) {
-        const img = document.createElement('img');
-        img.src = m.image;
-        img.style.maxWidth = '280px';
-        img.style.maxHeight = '200px';
-        img.style.borderRadius = '8px';
-        img.style.marginTop = '6px';
-        div.appendChild(img);
-      }
-      if (m.content) {
-        const bub = document.createElement('div');
-        bub.className = 'bubble';
-        if (m.role === 'assistant' && m.isPlan) {
-          bub.classList.add('think-plan');
-          bub.innerHTML = `<div class="plan-title">🧠 План действий:</div>` + m.content;
-        } else {
-          bub.textContent = m.content;
-        }
-        div.appendChild(bub);
-      }
-      if (m.logs && m.logs.length) {
-        const logsDiv = document.createElement('div');
-        logsDiv.className = 'logs';
-        m.logs.forEach(l => {
-          const line = document.createElement('div');
-          line.className = 'log-entry';
-          line.textContent = l;
-          logsDiv.appendChild(line);
-        });
-        div.appendChild(logsDiv);
-      }
-      messagesEl.appendChild(div);
-    });
-    messagesEl.scrollTop = messagesEl.scrollHeight;
-  }
-
-  function addMessage(role, content, logs = [], image = null, isPlan = false) {
-    messages.push({ role, content, logs, image, isPlan });
-    saveMessages();
-    renderMessages();
-  }
-
-  function showTyping() {
-    const div = document.createElement('div');
-    div.className = 'msg assistant';
-    div.id = 'typing-indicator';
-    div.innerHTML = `
-      <div class="author">PPG Assistant</div>
-      <div class="typing-indicator">
-        <span>Думаю</span>
-        <div class="dots">
-          <span class="dot"></span>
-          <span class="dot"></span>
-          <span class="dot"></span>
+    <div class="preview-panel" id="previewPanel">
+      <div class="preview-header">
+        <span id="previewFileName" style="font-family: monospace; font-size: 13px;">file.cs</span>
+        <div style="display: flex; gap: 6px;">
+          <button id="saveEditorBtn" class="btn-primary" style="padding: 4px 10px; font-size: 12px;">Сохранить</button>
+          <button id="closePreviewBtn" style="padding: 4px 8px; font-size: 12px;">✕</button>
         </div>
       </div>
-    `;
-    messagesEl.appendChild(div);
-    messagesEl.scrollTop = messagesEl.scrollHeight;
-  }
+      <div class="editor-container">
+        <div class="line-numbers" id="lineNumbers">1</div>
+        <textarea class="editor-textarea" id="editorArea" spellcheck="false"></textarea>
+      </div>
+    </div>
+  </div>
 
-  function hideTyping() {
-    const el = document.getElementById('typing-indicator');
-    if (el) el.remove();
-  }
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 style="font-size: 15px;">⚙️ Настройки</h3>
+        <button id="closeModalCross" style="padding: 2px 6px;">✕</button>
+      </div>
+      <div class="modal-tabs">
+        <button class="tab-btn active" onclick="switchTab('tabApi', this)">API</button>
+        <button class="tab-btn" onclick="switchTab('tabVisual', this)">Визуал</button>
+      </div>
 
-  function parseVFSCommands(text) {
-    const regex = /```vfs\s*\n([\s\S]*?)\n```/g;
-    let match;
-    const logs = [];
-    let clean = text.replace(regex, '').trim();
+      <div id="tabApi" class="tab-content active">
+        <div class="form-group">
+          <label>API Key</label>
+          <div style="display: flex; gap: 6px;">
+            <input type="password" id="apiKeyInput" placeholder="AIzaSy... или sk-..." style="flex: 1;" />
+            <button id="toggleApiKeyVisBtn">👁️</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+            <input type="checkbox" id="sessionOnlyCheckbox" /> 🔒 Не сохранять ключ в LocalStorage (Session only)
+          </label>
+        </div>
+        <div class="form-group">
+          <label>Base URL (опционально, без слэша в конце)</label>
+          <input type="text" id="baseUrlInput" placeholder="https://generativelanguage.googleapis.com" />
+        </div>
+        <div class="form-group">
+          <label>Модель</label>
+          <input type="text" id="customModelInput" placeholder="gemini-2.5-flash" />
+        </div>
+      </div>
+
+      <div id="tabVisual" class="tab-content">
+        <label style="font-size: 12px; color: var(--text-muted); font-weight: 600;">Тема оформления</label>
+        <div class="theme-grid">
+          <div class="theme-card active" id="themeSpace" onclick="selectTheme('space')">
+            <div class="theme-card-icon">🌌</div>
+            <div class="theme-card-title">Космос</div>
+          </div>
+          <div class="theme-card" id="themeAmoled" onclick="selectTheme('amoled')">
+            <div class="theme-card-icon">🖤</div>
+            <div class="theme-card-title">AMOLED</div>
+          </div>
+          <div class="theme-card" id="themeTown" onclick="selectTheme('town')">
+            <div class="theme-card-icon">🌆</div>
+            <div class="theme-card-title">Town</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="padding: 16px 20px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 10px;">
+        <button id="closeModalBtn">Отмена</button>
+        <button id="saveSettingsBtn" class="btn-primary">Сохранить</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toastContainer"></div>
+
+  <div class="modal-overlay" id="confirmModalOverlay">
+    <div class="modal" style="width: 380px;">
+      <div class="modal-header">
+        <h3 id="confirmModalTitle" style="font-size: 15px;">Подтверждение</h3>
+        <button id="closeConfirmCross" style="padding: 2px 6px;">✕</button>
+      </div>
+      <div style="padding: 20px; font-size: 13.5px; color: var(--text-main);" id="confirmModalText">
+        Вы уверены?
+      </div>
+      <div style="padding: 12px 20px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 10px;">
+        <button id="cancelConfirmBtn">Отмена</button>
+        <button id="okConfirmBtn" class="btn-primary">Подтвердить</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const BULB_ICON_URL = "https://cdn-icons-png.flaticon.com/512/29/29964.png";
+    const CODE_ICON_URL = "https://cdn-icons-png.flaticon.com/512/1157/1157109.png";
+
+    let fs = JSON.parse(localStorage.getItem('app_fs_b2') || '{\n  "mod.json": "{\\n  \\"Name\\": \\"My PPG Mod\\",\\n  \\"Author\\": \\"Developer\\",\\n  \\"Description\\": \\"Created with PPG Mod Studio AI\\",\\n  \\"ModVersion\\": \\"1.0\\",\\n  \\"TargetVersion\\": \\"1.26\\"\\n}",\n  "Main.cs": "// Main PPG Mod Script\\nusing UnityEngine;\\n\\nnamespace Mod\\n{\\n    public class Mod\\n    {\\n        public static void Main()\\n        {\\n            ModAPI.Register(new ModDefinition());\\n        }\\n    }\\n}"\n}');
+    let messages = JSON.parse(localStorage.getItem('app_messages_b2') || '[]');
     
-    while ((match = regex.exec(text)) !== null) {
-      const block = match[1].trim();
-      const lines = block.split('\n');
-      const cmd = lines[0].trim();
-      if (cmd.startsWith('WRITE ')) {
-        const path = cmd.replace('WRITE ', '').trim();
-        const content = lines.slice(1).join('\n');
-        setFile(path, content);
-        logs.push('✅ Сохранён: ' + path);
-      } else if (cmd.startsWith('DELETE ')) {
-        const path = cmd.replace('DELETE ', '').trim();
-        deleteFile(path);
-        logs.push('🗑 Удалён: ' + path);
+    let sessionOnly = localStorage.getItem('app_session_only_key') === 'true';
+    let apiKey = sessionOnly ? (sessionStorage.getItem('app_api_key') || '') : (localStorage.getItem('app_api_key') || '');
+    let baseUrl = localStorage.getItem('app_base_url') || '';
+    let customModel = localStorage.getItem('app_custom_model') || 'gemini-2.5-flash';
+    let currentTheme = localStorage.getItem('app_theme') || 'space';
+
+    let selectedFilePath = null;
+    let isWaiting = false;
+    let attachedImages = [];
+    let pendingConfirmAction = null;
+
+    const spaceCanvas = document.getElementById('spaceCanvas');
+    const ctx = spaceCanvas ? spaceCanvas.getContext('2d') : null;
+    let stars = [];
+    const mouse = { x: 0, y: 0 };
+
+    function initStars() {
+      stars = [];
+      const numStars = Math.floor((window.innerWidth * window.innerHeight) / 3000);
+      for (let i = 0; i < numStars; i++) {
+        stars.push({
+          x: Math.random() * window.innerWidth,
+          y: Math.random() * window.innerHeight,
+          radius: Math.random() * 1.5 + 0.5,
+          alpha: Math.random(),
+          speed: Math.random() * 0.02 + 0.005
+        });
       }
     }
-    return { cleanText: clean, logs };
-  }
 
-  async function handleSend() {
-    const text = inputBox.value.trim();
-    if ((!text && !activeAttachment) || isWaiting) return;
-    if (!apiKey) {
-      alert('Укажите API Key в настройках!');
-      modalOverlay.classList.add('open');
-      return;
+    function resizeCanvas() {
+      if (!spaceCanvas) return;
+      spaceCanvas.width = window.innerWidth;
+      spaceCanvas.height = window.innerHeight;
+      initStars();
     }
 
-    let imgData = activeAttachment?.type === 'image' ? activeAttachment : null;
-    let fullPrompt = text;
-    if (activeAttachment?.type === 'text') {
-      fullPrompt += '\n\n[Файл ' + activeAttachment.name + ']:\n' + activeAttachment.content;
-    }
-    activeAttachment = null;
-    inputBox.value = '';
-    inputBox.style.height = 'auto';
-
-    addMessage('user', text, [], imgData?.dataUrl || null);
-    isWaiting = true;
-    sendBtn.disabled = true;
-
-    const thinkMode = thinkModeCheckbox.checked;
-    if (thinkMode) {
-      showTyping();
-    }
-
-    try {
-      const files = getFlatFiles(fs);
-      const fsContext = '[Текущие файлы мода]:\n' + (files.map(f => f.path).join('\n') || '(пусто)');
-      const targetModel = customModel || 'gemini-2.5-flash';
-      if (!targetModel) throw new Error('Укажите модель в настройках.');
-
-      const systemInstruction = getSystemInstruction(thinkMode);
-
-      let rawAnswer = '';
-      const isCustomProxy = baseUrl.trim() && !baseUrl.includes('generativelanguage.googleapis.com');
-
-      if (!isCustomProxy) {
-        const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + targetModel + ':generateContent?key=' + apiKey;
-        const contents = messages.filter(m => m.role !== 'system').map(m => ({
-          role: m.role === 'user' ? 'user' : 'model',
-          parts: [{ text: m.content || ' ' }]
-        }));
-        const currentParts = [{ text: fsContext + '\n\nЗадача: ' + fullPrompt }];
-        if (imgData) {
-          currentParts.unshift({ inlineData: { mimeType: imgData.mimeType, data: imgData.base64 } });
-        }
-        contents[contents.length - 1].parts = currentParts;
-        const res = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            systemInstruction: { parts: [{ text: systemInstruction }] },
-            contents
-          })
-        });
-        if (!res.ok) {
-          const err = await res.json();
-          throw new Error(err.error?.message || 'HTTP ' + res.status);
-        }
-        const data = await res.json();
-        rawAnswer = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-      } else {
-        const endpoint = baseUrl.replace(/\/+$/, '') + '/chat/completions';
-        const formatted = [
-          { role: 'system', content: systemInstruction + '\n\n' + fsContext },
-          ...messages.filter(m => m.role !== 'system').map(m => ({ role: m.role, content: m.content || '' }))
-        ];
-        formatted[formatted.length - 1].content = fsContext + '\n\nЗадача: ' + fullPrompt;
-        const res = await fetch(endpoint, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + apiKey
-          },
-          body: JSON.stringify({ model: targetModel, messages: formatted })
-        });
-        if (!res.ok) {
-          const err = await res.json();
-          throw new Error(err.error?.message || 'HTTP ' + res.status);
-        }
-        const data = await res.json();
-        rawAnswer = data.choices?.[0]?.message?.content || '';
-      }
-
-      hideTyping();
-
-      let planText = '';
-      let codeText = rawAnswer;
+    function animateSpace() {
+      if (!ctx || !spaceCanvas) return;
+      ctx.clearRect(0, 0, spaceCanvas.width, spaceCanvas.height);
       
-      if (thinkMode) {
-        const lines = rawAnswer.split('\n');
-        let planLines = [];
-        let i = 0;
-        while (i < lines.length && (lines[i].trim().startsWith('-') || lines[i].trim() === '')) {
-          if (lines[i].trim().startsWith('-')) {
-            planLines.push(lines[i].trim());
+      if (currentTheme === 'space') {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+        stars.forEach(star => {
+          star.alpha += star.speed;
+          if (star.alpha > 1 || star.alpha < 0) star.speed = -star.speed;
+          ctx.globalAlpha = Math.abs(star.alpha);
+          ctx.beginPath();
+          ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+          ctx.fill();
+        });
+        ctx.globalAlpha = 1;
+      }
+      
+      requestAnimationFrame(animateSpace);
+    }
+
+    const fileList = document.getElementById('fileList');
+    const messagesEl = document.getElementById('messages');
+    const inputBox = document.getElementById('inputBox');
+    const sendBtn = document.getElementById('sendBtn');
+    const previewPanel = document.getElementById('previewPanel');
+    const editorArea = document.getElementById('editorArea');
+    const lineNumbers = document.getElementById('lineNumbers');
+    const previewFileName = document.getElementById('previewFileName');
+    const saveEditorBtn = document.getElementById('saveEditorBtn');
+    const closePreviewBtn = document.getElementById('closePreviewBtn');
+    const inspectorStatus = document.getElementById('inspectorStatus');
+    const modalOverlay = document.getElementById('modalOverlay');
+    const settingsBtn = document.getElementById('settingsBtn');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    const closeModalCross = document.getElementById('closeModalCross');
+    const saveSettingsBtn = document.getElementById('saveSettingsBtn');
+    const apiKeyInput = document.getElementById('apiKeyInput');
+    const baseUrlInput = document.getElementById('baseUrlInput');
+    const customModelInput = document.getElementById('customModelInput');
+    const thinkModeCheckbox = document.getElementById('thinkModeCheckbox');
+    const attachBtn = document.getElementById('attachBtn');
+    const fileInput = document.getElementById('fileInput');
+    const attachmentPreview = document.getElementById('attachmentPreview');
+    const sessionOnlyCheckbox = document.getElementById('sessionOnlyCheckbox');
+    const toggleApiKeyVisBtn = document.getElementById('toggleApiKeyVisBtn');
+
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      if (!container) return;
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.innerHTML = `<span>${type === 'error' ? '❌' : type === 'success' ? '✅' : 'ℹ️'}</span> <span>${message}</span>`;
+      container.appendChild(toast);
+      setTimeout(() => toast.remove(), 4000);
+    }
+
+    function showConfirmModal(title, text, onConfirm) {
+      document.getElementById('confirmModalTitle').textContent = title;
+      document.getElementById('confirmModalText').textContent = text;
+      pendingConfirmAction = onConfirm;
+      document.getElementById('confirmModalOverlay').classList.add('open');
+    }
+
+    document.getElementById('cancelConfirmBtn').onclick = () => {
+      document.getElementById('confirmModalOverlay').classList.remove('open');
+      pendingConfirmAction = null;
+    };
+    document.getElementById('closeConfirmCross').onclick = () => {
+      document.getElementById('confirmModalOverlay').classList.remove('open');
+      pendingConfirmAction = null;
+    };
+    document.getElementById('okConfirmBtn').onclick = () => {
+      if (pendingConfirmAction) pendingConfirmAction();
+      document.getElementById('confirmModalOverlay').classList.remove('open');
+      pendingConfirmAction = null;
+    };
+
+    window.addEventListener('resize', resizeCanvas);
+    window.addEventListener('mousemove', (e) => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+    });
+
+    window.selectTheme = function(themeName) {
+      currentTheme = themeName;
+      localStorage.setItem('app_theme', themeName);
+      document.body.className = `theme-${themeName}`;
+
+      document.querySelectorAll('.theme-card').forEach(card => card.classList.remove('active'));
+      const activeCard = document.getElementById(`theme${themeName.charAt(0).toUpperCase() + themeName.slice(1)}`);
+      if (activeCard) activeCard.classList.add('active');
+    };
+
+    window.switchTab = function(tabId, btnElement) {
+      document.querySelectorAll('.modal-tabs .tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+      
+      if (btnElement) btnElement.classList.add('active');
+      const targetTab = document.getElementById(tabId);
+      if (targetTab) targetTab.classList.add('active');
+    };
+
+    function saveFs() {
+      localStorage.setItem('app_fs_b2', JSON.stringify(fs));
+      validateModFiles();
+      renderFileList();
+    }
+
+    function saveMessages() {
+      localStorage.setItem('app_messages_b2', JSON.stringify(messages));
+    }
+
+    function validateModFiles() {
+      const hasModJson = 'mod.json' in fs;
+      const hasScript = Object.keys(fs).some(f => f.endsWith('.cs'));
+      
+      if (hasModJson && hasScript) {
+        inspectorStatus.className = 'inspector-status valid';
+        inspectorStatus.innerHTML = '<span>✅ Мод валиден (mod.json + C#)</span>';
+      } else {
+        inspectorStatus.className = 'inspector-status invalid';
+        inspectorStatus.innerHTML = `<span>⚠️ ${!hasModJson ? 'Отсутствует mod.json ' : ''}${!hasScript ? 'Отсутствует .cs файл' : ''}</span>`;
+      }
+    }
+
+    function renderFileList() {
+      fileList.innerHTML = '';
+      Object.keys(fs).forEach(fileName => {
+        const item = document.createElement('div');
+        item.className = `file-item ${selectedFilePath === fileName ? 'active' : ''}`;
+        item.innerHTML = `
+          <span>📄 ${fileName}</span>
+          <span class="del" title="Удалить файл">✕</span>
+        `;
+        item.onclick = (e) => {
+          if (e.target.classList.contains('del')) {
+            delete fs[fileName];
+            if (selectedFilePath === fileName) {
+              selectedFilePath = null;
+              previewPanel.classList.remove('open');
+            }
+            saveFs();
+          } else {
+            openPreview(fileName);
           }
-          i++;
-        }
-        if (planLines.length > 0) {
-          planText = planLines.join('\n');
-          codeText = lines.slice(i).join('\n').trim();
-        }
-      }
-
-      if (planText) {
-        addMessage('assistant', planText, [], null, true);
-      }
-
-      const { cleanText, logs } = parseVFSCommands(codeText);
-      
-      if (cleanText) {
-        addMessage('assistant', cleanText, logs);
-      } else if (logs.length > 0) {
-        addMessage('assistant', '✅ Все файлы созданы!', logs);
-      } else {
-        addMessage('assistant', '✅ Готово!');
-      }
-
-    } catch (e) {
-      hideTyping();
-      addMessage('assistant', '❌ Ошибка: ' + e.message);
-    } finally {
-      isWaiting = false;
-      sendBtn.disabled = false;
-    }
-  }
-
-  // --- Attach ---
-  attachBtn.onclick = function() { fileInput.click(); };
-  fileInput.onchange = function(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    if (file.type.startsWith('image/')) {
-      reader.onload = function(ev) {
-        activeAttachment = {
-          type: 'image',
-          mimeType: file.type,
-          dataUrl: ev.target.result,
-          base64: ev.target.result.split(',')[1]
         };
-        inputBox.placeholder = '📎 ' + file.name + ' (изображение)';
+        fileList.appendChild(item);
+      });
+    }
+
+    function openPreview(fileName) {
+      selectedFilePath = fileName;
+      previewFileName.textContent = fileName;
+      editorArea.value = fs[fileName] || '';
+      updateLineNumbers();
+      previewPanel.classList.add('open');
+      renderFileList();
+    }
+
+    function updateLineNumbers() {
+      const lines = editorArea.value.split('\n').length;
+      lineNumbers.innerHTML = Array.from({ length: lines }, (_, i) => i + 1).join('<br>');
+    }
+
+    editorArea.oninput = updateLineNumbers;
+
+    saveEditorBtn.onclick = () => {
+      if (selectedFilePath) {
+        fs[selectedFilePath] = editorArea.value;
+        saveFs();
+        showToast(`Файл ${selectedFilePath} сохранен`, 'success');
+      }
+    };
+
+    closePreviewBtn.onclick = () => {
+      previewPanel.classList.remove('open');
+      selectedFilePath = null;
+      renderFileList();
+    };
+
+    document.getElementById('clearFsBtn').onclick = () => {
+      showConfirmModal('Очистка VFS', 'Вы действительно хотите удалить все файлы из проекта?', () => {
+        fs = {};
+        saveFs();
+        previewPanel.classList.remove('open');
+        showToast('Все файлы проекта очищены', 'info');
+      });
+    };
+
+    document.getElementById('clearChatBtn').onclick = () => {
+      showConfirmModal('Очистка чата', 'Удалить всю историю сообщений?', () => {
+        messages = [];
+        saveMessages();
+        renderMessages();
+        showToast('История чата очищена', 'info');
+      });
+    };
+
+    window.addEventListener('paste', (e) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      for (let item of items) {
+        if (item.type.indexOf('image') !== -1) {
+          const blob = item.getAsFile();
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            attachedImages.push(event.target.result);
+            renderAttachments();
+          };
+          reader.readAsDataURL(blob);
+        }
+      }
+    });
+
+    attachBtn.onclick = () => fileInput.click();
+    fileInput.onchange = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          attachedImages.push(event.target.result);
+          renderAttachments();
+        };
+        reader.readAsDataURL(file);
+      }
+      fileInput.value = '';
+    };
+
+    function renderAttachments() {
+      attachmentPreview.innerHTML = '';
+      attachedImages.forEach((imgSrc, idx) => {
+        const thumb = document.createElement('div');
+        thumb.className = 'attachment-thumb';
+        thumb.innerHTML = `
+          <img src="${imgSrc}" alt="attached" />
+          <button class="remove-btn" onclick="removeAttachment(${idx})">✕</button>
+        `;
+        attachmentPreview.appendChild(thumb);
+      });
+    }
+
+    window.removeAttachment = function(idx) {
+      attachedImages.splice(idx, 1);
+      renderAttachments();
+    };
+
+    settingsBtn.onclick = () => {
+      apiKeyInput.value = apiKey;
+      baseUrlInput.value = baseUrl;
+      customModelInput.value = customModel;
+      sessionOnlyCheckbox.checked = sessionOnly;
+      modalOverlay.classList.add('open');
+    };
+
+    closeModalBtn.onclick = () => modalOverlay.classList.remove('open');
+    closeModalCross.onclick = () => modalOverlay.classList.remove('open');
+
+    toggleApiKeyVisBtn.onclick = () => {
+      apiKeyInput.type = apiKeyInput.type === 'password' ? 'text' : 'password';
+    };
+
+    saveSettingsBtn.onclick = () => {
+      apiKey = apiKeyInput.value.trim();
+      baseUrl = baseUrlInput.value.trim();
+      customModel = customModelInput.value.trim();
+      sessionOnly = sessionOnlyCheckbox.checked;
+
+      localStorage.setItem('app_session_only_key', sessionOnly);
+      if (sessionOnly) {
+        sessionStorage.setItem('app_api_key', apiKey);
+        localStorage.removeItem('app_api_key');
+      } else {
+        localStorage.setItem('app_api_key', apiKey);
+        sessionStorage.removeItem('app_api_key');
+      }
+
+      localStorage.setItem('app_base_url', baseUrl);
+      localStorage.setItem('app_custom_model', customModel);
+      modalOverlay.classList.remove('open');
+      showToast('Настройки сохранены', 'success');
+    };
+
+    function parseAndApplyVfs(text) {
+      const codeBlockRegex = /```(?:file:([^\n]+)|([a-zA-Z0-9_#-]+))?\n([\s\S]*?)```/g;
+      let match;
+      let updated = false;
+
+      while ((match = codeBlockRegex.exec(text)) !== null) {
+        let fileName = match[1]?.trim();
+        const lang = match[2]?.trim().toLowerCase();
+        const code = match[3];
+
+        if (!fileName) {
+          if (lang === 'json') fileName = 'mod.json';
+          else if (lang === 'csharp' || lang === 'cs') fileName = 'Main.cs';
+        }
+
+        if (fileName && code) {
+          fs[fileName] = code;
+          updated = true;
+        }
+      }
+
+      if (updated) {
+        saveFs();
+      }
+    }
+
+    function escapeHtml(text) {
+      return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function formatMarkdown(text) {
+      if (!text) return '';
+      
+      let html = escapeHtml(text);
+
+      // Headers (### Header, ## Header, # Header)
+      html = html.replace(/^###\s+(.*$)/gim, '<strong class="md-header">$1</strong>');
+      html = html.replace(/^##\s+(.*$)/gim, '<strong class="md-header" style="font-size: 16px;">$1</strong>');
+      html = html.replace(/^#\s+(.*$)/gim, '<strong class="md-header" style="font-size: 17px;">$1</strong>');
+
+      // Bold (**text** or __text__)
+      html = html.replace(/\*\*(.*?)\*\*/g, '<strong style="color: #ffffff;">$1</strong>');
+      html = html.replace(/__(.*?)__/g, '<strong style="color: #ffffff;">$1</strong>');
+
+      // Inline code (`code`)
+      html = html.replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>');
+
+      // Line breaks
+      html = html.replace(/\n/g, '<br>');
+
+      return html;
+    }
+
+    function renderMessages() {
+      messagesEl.innerHTML = '';
+      messages.forEach(msg => {
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `msg ${msg.role}`;
+        
+        const author = document.createElement('div');
+        author.className = 'author';
+        author.textContent = msg.role === 'user' ? 'Вы' : 'PPG Mod Studio AI';
+        msgDiv.appendChild(author);
+
+        if (msg.role === 'user') {
+          const bubble = document.createElement('div');
+          bubble.className = 'bubble';
+          bubble.textContent = msg.content;
+          msgDiv.appendChild(bubble);
+        } else {
+          const bubbleContainer = document.createElement('div');
+          bubbleContainer.className = 'bubble-container';
+
+          let textContent = msg.content || '';
+          let thinkingText = '';
+
+          if (textContent.includes('THINKING:')) {
+            const thinkMatch = textContent.match(/THINKING:\s*([\s\S]*?)(?=(```|$))/i);
+            if (thinkMatch) {
+              thinkingText = thinkMatch[1].trim();
+              textContent = textContent.replace(/THINKING:\s*[\s\S]*?(?=(```|$))/i, '').trim();
+            }
+          }
+
+          if (thinkingText) {
+            const thinkCard = document.createElement('div');
+            thinkCard.className = 'thinking-card';
+            thinkCard.innerHTML = `
+              <img src="${BULB_ICON_URL}" class="thinking-icon" alt="think" />
+              <div>
+                <div class="thinking-title">План разработки мода</div>
+                <div class="thinking-plan-text">${formatMarkdown(thinkingText)}</div>
+              </div>
+            `;
+            bubbleContainer.appendChild(thinkCard);
+          }
+
+          const codeBlockRegex = /```(?:file:([^\n]+)|([a-zA-Z0-9_#-]+))?\n([\s\S]*?)```/g;
+          let lastIndex = 0;
+          let match;
+
+          while ((match = codeBlockRegex.exec(textContent)) !== null) {
+            const plainText = textContent.substring(lastIndex, match.index).trim();
+            if (plainText) {
+              const p = document.createElement('div');
+              p.className = 'text-content-block';
+              p.innerHTML = formatMarkdown(plainText);
+              bubbleContainer.appendChild(p);
+            }
+
+            const fileName = match[1]?.trim() || (match[2] === 'json' ? 'mod.json' : 'Main.cs');
+            const code = match[3];
+
+            const codeCard = document.createElement('div');
+            codeCard.className = 'code-card open';
+            codeCard.innerHTML = `
+              <div class="code-card-header" onclick="this.parentElement.classList.toggle('open')">
+                <div class="code-card-top">
+                  <div class="code-card-title">
+                    <img src="${CODE_ICON_URL}" alt="code" />
+                    <span>${escapeHtml(fileName)}</span>
+                  </div>
+                  <span class="chevron">▼</span>
+                </div>
+                <div class="code-card-subtitle">Нажмите, чтобы развернуть/свернуть исходный код</div>
+              </div>
+              <div class="code-card-body">
+                <div class="code-inner-box">${escapeHtml(code)}</div>
+              </div>
+            `;
+            bubbleContainer.appendChild(codeCard);
+            lastIndex = codeBlockRegex.lastIndex;
+          }
+
+          const remainingText = textContent.substring(lastIndex).trim();
+          if (remainingText) {
+            const p = document.createElement('div');
+            p.className = 'text-content-block';
+            p.innerHTML = formatMarkdown(remainingText);
+            bubbleContainer.appendChild(p);
+          }
+
+          msgDiv.appendChild(bubbleContainer);
+        }
+
+        messagesEl.appendChild(msgDiv);
+      });
+
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    document.getElementById('exportZipBtn').onclick = async () => {
+      const filesKeys = Object.keys(fs);
+      if (filesKeys.length === 0) {
+        showToast('Нечего экспортировать: VFS пуст', 'warning');
+        return;
+      }
+
+      let hasContent = false;
+      for (const name of filesKeys) {
+        if (fs[name] && fs[name].trim().length > 0) {
+          hasContent = true;
+          break;
+        }
+      }
+
+      if (!hasContent) {
+        showToast('Все файлы в проекте пустые', 'warning');
+        return;
+      }
+
+      try {
+        const zip = new JSZip();
+        filesKeys.forEach(fileName => {
+          zip.file(fileName, fs[fileName] || '');
+        });
+
+        const blob = await zip.generateAsync({ type: 'blob' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'PPG_Mod.zip';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(a.href);
+        showToast('📦 Мод успешно экспортирован в ZIP!', 'success');
+      } catch (err) {
+        showToast('Ошибка создания ZIP: ' + err.message, 'error');
+      }
+    };
+
+    sendBtn.onclick = async () => {
+      const text = inputBox.value.trim();
+      if ((!text && attachedImages.length === 0) || isWaiting) return;
+
+      const userMsg = {
+        role: 'user',
+        content: text,
+        images: [...attachedImages]
       };
-      reader.readAsDataURL(file);
-    } else {
-      reader.onload = function(ev) {
-        activeAttachment = { type: 'text', name: file.name, content: ev.target.result };
-        inputBox.placeholder = '📎 ' + file.name + ' (текст)';
+
+      messages.push(userMsg);
+      inputBox.value = '';
+      attachedImages = [];
+      renderAttachments();
+
+      const assistantMsg = {
+        role: 'assistant',
+        content: '⏳ Генерирую мод...'
       };
-      reader.readAsText(file);
-    }
-    fileInput.value = '';
-  };
-
-  // --- Events ---
-  sendBtn.onclick = handleSend;
-  inputBox.onkeydown = function(e) {
-    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-      e.preventDefault();
-      handleSend();
-    }
-  };
-
-  modelSelectBtn.onclick = function() {
-    modelDropdown.classList.toggle('open');
-  };
-  modelDropdown.onclick = function(e) {
-    const opt = e.target.closest('.opt');
-    if (!opt) return;
-    document.querySelectorAll('.opt').forEach(o => o.classList.toggle('selected', o === opt));
-    modelDropdown.classList.remove('open');
-  };
-
-  settingsBtn.onclick = function() {
-    apiKeyInput.value = apiKey;
-    baseUrlInput.value = baseUrl;
-    customModelInput.value = customModel;
-    modalOverlay.classList.add('open');
-  };
-  closeModalBtn.onclick = function() { modalOverlay.classList.remove('open'); };
-  saveSettingsBtn.onclick = function() {
-    apiKey = apiKeyInput.value.trim();
-    baseUrl = baseUrlInput.value.trim();
-    customModel = customModelInput.value.trim();
-    localStorage.setItem('app_api_key', apiKey);
-    localStorage.setItem('app_base_url', baseUrl);
-    localStorage.setItem('app_custom_model', customModel);
-    modalOverlay.classList.remove('open');
-  };
-
-  zipBtn.onclick = async function() {
-    const files = getFlatFiles(fs);
-    if (!files.length) {
-      alert('Нет файлов для архива');
-      return;
-    }
-    try {
-      const zip = new JSZip();
-      files.forEach(f => zip.file(f.path.replace(/^\//, ''), f.content));
-      const blob = await zip.generateAsync({ type: 'blob' });
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = 'PPG_Mod.zip';
-      a.click();
-    } catch(e) {
-      alert('Ошибка создания ZIP: ' + e.message);
-    }
-  };
-
-  clearBtn.onclick = function() {
-    if (confirm('Очистить историю чата?')) {
-      messages = [];
+      messages.push(assistantMsg);
       saveMessages();
       renderMessages();
-    }
-  };
-  deleteAllFilesBtn.onclick = function() {
-    if (confirm('Удалить все файлы мода?')) {
-      deleteAllFiles();
-    }
-  };
 
-  closePreview.onclick = closePreviewPanel;
+      isWaiting = true;
+      sendBtn.disabled = true;
 
-  // --- Init ---
-  function init() {
-    renderMessages();
-    renderFileList();
-    document.querySelectorAll('.opt').forEach(o => {
-      if (o.dataset.model === 'custom') {
-        o.classList.add('selected');
-      }
-    });
-    currentModelLabel.textContent = customModel || 'Кастомная модель';
-    closePreviewPanel();
-    console.log('PPG Mod Studio AI готов!');
+      try {
+        let endpoint = (baseUrl || 'https://generativelanguage.googleapis.com').trim().replace(/\/+$/, '');
+        if (!endpoint.startsWith('http://') && !endpoint.startsWith('https://')) {
+          endpoint = 'https://' + endpoint;
+        }
+        const modelToUse = (customModel || 'gemini-2.5-flash').trim();
+        const isThink = thinkModeCheckbox.checked;
+        
+        const systemPrompt = `You are PPG Mod Studio AI, an expert C# and modding assistant for People Playground (PPG).
+Always format C# code and mod files cleanly into code blocks with filenames, for example:
+\`\`\`file:mod.json
+{
+  "Name": "My Mod",
+  "Author": "User",
+  "Description": "Mod description",
+  "ModVersion": "1.0",
+  "TargetVersion": "1.26"
+}
+\`\`\`
+\`\`\`file:Main.cs
+using UnityEngine;
+namespace Mod {
+  public class Mod {
+    public static void Main() { ModAPI.Register(new ModDefinition()); }
   }
-  init();
-})();
-</script>
+}
+\`\`\`
+Always ensure mod.json exists and is valid.
+Current files in user workspace VFS:
+${JSON.stringify(fs, null, 2)}
+${isThink ? 'In your response, start with a thinking block header "THINKING:" and outline your design plan before providing code blocks.' : ''}`;
+
+        const contents = [];
+        const recentMessages = messages.slice(-7, -1);
+        recentMessages.forEach(m => {
+          const parts = [];
+          if (m.content) parts.push({ text: m.content });
+          if (m.images && m.images.length) {
+            m.images.forEach(imgData => {
+              const base64Data = imgData.split(',')[1];
+              const mimeType = imgData.split(';')[0].split(':')[1];
+              parts.push({ inlineData: { mimeType, data: base64Data } });
+            });
+          }
+          contents.push({
+            role: m.role === 'user' ? 'user' : 'model',
+            parts: parts.length ? parts : [{ text: '...' }]
+          });
+        });
+
+        const currentParts = [{ text: text || 'Сгенерируй мод для PPG' }];
+        userMsg.images.forEach(imgData => {
+          const base64Data = imgData.split(',')[1];
+          const mimeType = imgData.split(';')[0].split(':')[1];
+          currentParts.push({ inlineData: { mimeType, data: base64Data } });
+        });
+        contents.push({ role: 'user', parts: currentParts });
+
+        const payload = {
+          contents: contents,
+          systemInstruction: {
+            parts: [{ text: systemPrompt }]
+          }
+        };
+
+        const res = await fetch(`${endpoint}/v1beta/models/${modelToUse}:generateContent?key=${apiKey}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if (!res.ok || data.error) {
+          throw new Error(data.error?.message || `HTTP Error ${res.status}`);
+        }
+
+        const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Не удалось получить текст из ответа API.';
+
+        messages[messages.length - 1].content = reply;
+        parseAndApplyVfs(reply);
+        saveMessages();
+        renderMessages();
+
+      } catch (err) {
+        let errMessage = err.message;
+        if (errMessage === 'Failed to fetch' || err.name === 'TypeError') {
+          errMessage = 'Failed to fetch (Сетевая ошибка / CORS / AdBlock). Проверьте интернет, API ключ, отключите AdBlocker или укажите правильный Base URL.';
+        }
+        messages[messages.length - 1].content = `⚠️ Ошибка: ${errMessage}`;
+        showToast('Ошибка API: ' + errMessage, 'error');
+        saveMessages();
+        renderMessages();
+      } finally {
+        isWaiting = false;
+        sendBtn.disabled = false;
+      }
+    };
+
+    inputBox.onkeydown = (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendBtn.click();
+      }
+    };
+
+    window.onload = function() {
+      resizeCanvas();
+      selectTheme(currentTheme);
+      validateModFiles();
+      renderFileList();
+      renderMessages();
+      animateSpace();
+    };
+  </script>
 </body>
 </html>
